@@ -1,0 +1,1013 @@
+{% extends 'properties/base.html' %}
+{% load static %}
+
+{% block title %}{{ property.title }} - Property Details{% endblock %}
+
+{% block extra_css %}
+<style>
+    /* Fullscreen Hero with Property Title */
+    .property-hero {
+        position: relative;
+        height: 70vh;
+        background: linear-gradient(135deg, rgba(5, 150, 105, 0.85) 0%, rgba(4, 120, 87, 0.85) 100%),
+                    url('{{ property.images.first.image.url }}') center/cover;
+        display: flex;
+        align-items: center;
+        margin-top: -2rem;
+    }
+    
+    .hero-content-left {
+        background: rgba(255, 255, 255, 0.15);
+        backdrop-filter: blur(20px);
+        -webkit-backdrop-filter: blur(20px);
+        border: 1px solid rgba(255, 255, 255, 0.3);
+        border-radius: 20px;
+        padding: 2.5rem;
+        color: white;
+        max-width: 600px;
+    }
+    
+    .hero-price-right {
+        background: rgba(255, 255, 255, 0.2);
+        backdrop-filter: blur(20px);
+        border: 1px solid rgba(255, 255, 255, 0.3);
+        border-radius: 20px;
+        padding: 2rem;
+        color: white;
+        text-align: center;
+    }
+    
+    .floating-actions {
+        position: fixed;
+        bottom: 30px;
+        right: 30px;
+        z-index: 1000;
+        display: flex;
+        flex-direction: column;
+        gap: 15px;
+    }
+    
+    .floating-btn {
+        width: 60px;
+        height: 60px;
+        border-radius: 50%;
+        background: white;
+        border: none;
+        box-shadow: 0 8px 25px rgba(5, 150, 105, 0.3);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 1.5rem;
+        color: #059669;
+        cursor: pointer;
+        transition: all 0.3s ease;
+    }
+    
+    .floating-btn:hover {
+        transform: scale(1.15);
+        background: #059669;
+        color: white;
+    }
+    
+    /* Breadcrumb */
+    .breadcrumb-custom {
+        background: rgba(255, 255, 255, 0.1);
+        backdrop-filter: blur(10px);
+        border-radius: 50px;
+        padding: 0.75rem 1.5rem;
+        display: inline-flex;
+    }
+    
+    .breadcrumb-custom a {
+        color: rgba(255, 255, 255, 0.8);
+        text-decoration: none;
+    }
+    
+    .breadcrumb-custom a:hover {
+        color: white;
+    }
+    
+    /* Image Carousel */
+    .carousel-wrapper {
+        border-radius: 20px;
+        overflow: hidden;
+        box-shadow: 0 10px 40px rgba(0, 0, 0, 0.15);
+        margin-bottom: 2rem;
+    }
+    
+    .carousel-inner img {
+        height: 500px;
+        object-fit: cover;
+        width: 100%;
+    }
+    
+    .thumbnail-pills {
+        display: flex;
+        gap: 10px;
+        flex-wrap: wrap;
+        justify-content: center;
+        margin-top: 1rem;
+    }
+    
+    .thumbnail-pill {
+        width: 80px;
+        height: 80px;
+        border-radius: 12px;
+        object-fit: cover;
+        cursor: pointer;
+        border: 3px solid transparent;
+        transition: all 0.3s ease;
+    }
+    
+    .thumbnail-pill:hover,
+    .thumbnail-pill.active {
+        border-color: #059669;
+        transform: scale(1.1);
+    }
+    
+    /* Accordion Cards */
+    .detail-accordion .accordion-item {
+        border: none;
+        background: white;
+        border-radius: 16px;
+        margin-bottom: 1rem;
+        box-shadow: 0 4px 15px rgba(0, 0, 0, 0.08);
+        overflow: hidden;
+    }
+    
+    .detail-accordion .accordion-button {
+        background: linear-gradient(135deg, #d1fae5 0%, #a7f3d0 100%);
+        color: #047857;
+        font-weight: 600;
+        border: none;
+        padding: 1.25rem 1.5rem;
+    }
+    
+    .detail-accordion .accordion-button:not(.collapsed) {
+        background: linear-gradient(135deg, #059669 0%, #047857 100%);
+        color: white;
+    }
+    
+    .detail-accordion .accordion-button i {
+        margin-right: 1rem;
+        font-size: 1.5rem;
+    }
+    
+    .detail-accordion .accordion-body {
+        padding: 1.5rem;
+    }
+    
+    /* Sidebar Cards */
+    .sidebar-card {
+        background: white;
+        border-radius: 16px;
+        padding: 1.5rem;
+        margin-bottom: 1.5rem;
+        box-shadow: 0 4px 15px rgba(0, 0, 0, 0.08);
+        position: sticky;
+        top: 100px;
+    }
+    
+    .sidebar-card h5 {
+        color: #059669;
+        font-weight: 700;
+        margin-bottom: 1.25rem;
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+    }
+    
+    /* Agent Card */
+    .agent-profile {
+        background: linear-gradient(135deg, #d1fae5 0%, #a7f3d0 100%);
+        border-radius: 12px;
+        padding: 1.25rem;
+        text-align: center;
+        margin-bottom: 1rem;
+    }
+    
+    .agent-avatar {
+        width: 70px;
+        height: 70px;
+        border-radius: 50%;
+        background: #059669;
+        color: white;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 2rem;
+        margin: 0 auto 1rem;
+    }
+    
+    /* Quick Facts Box */
+    .quick-facts {
+        background: linear-gradient(135deg, #059669 0%, #047857 100%);
+        color: white;
+        border-radius: 16px;
+        padding: 1.5rem;
+        margin-bottom: 1.5rem;
+    }
+    
+    .quick-facts h5 {
+        color: white;
+        margin-bottom: 1.25rem;
+    }
+    
+    .fact-item {
+        display: flex;
+        justify-content: space-between;
+        padding: 0.75rem 0;
+        border-bottom: 1px solid rgba(255, 255, 255, 0.2);
+    }
+    
+    .fact-item:last-child {
+        border-bottom: none;
+    }
+    
+    /* Feature Icons Grid */
+    .feature-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
+        gap: 1.5rem;
+        margin-top: 1.5rem;
+    }
+    
+    .feature-item {
+        text-align: center;
+        padding: 1.5rem;
+        background: #f0fdf4;
+        border-radius: 12px;
+        transition: all 0.3s ease;
+    }
+    
+    .feature-item:hover {
+        background: #d1fae5;
+        transform: translateY(-5px);
+    }
+    
+    .feature-item i {
+        font-size: 2.5rem;
+        color: #059669;
+        margin-bottom: 0.75rem;
+    }
+    
+    .feature-item h5 {
+        font-size: 1.5rem;
+        font-weight: 700;
+        color: #047857;
+        margin-bottom: 0.25rem;
+    }
+    
+    .feature-item p {
+        color: #6b7280;
+        font-size: 0.9rem;
+        margin: 0;
+    }
+    
+    /* Map Container */
+    .map-wrapper {
+        border-radius: 16px;
+        overflow: hidden;
+        box-shadow: 0 8px 30px rgba(0, 0, 0, 0.12);
+        height: 400px;
+    }
+    
+    /* Similar Properties Vertical */
+    .similar-property-card {
+        background: white;
+        border-radius: 12px;
+        overflow: hidden;
+        margin-bottom: 1rem;
+        box-shadow: 0 4px 15px rgba(0, 0, 0, 0.08);
+        transition: all 0.3s ease;
+    }
+    
+    .similar-property-card:hover {
+        transform: translateX(5px);
+        box-shadow: 0 8px 25px rgba(5, 150, 105, 0.15);
+    }
+    
+    .similar-property-card img {
+        width: 100%;
+        height: 150px;
+        object-fit: cover;
+    }
+    
+    .similar-property-card .card-body {
+        padding: 1rem;
+    }
+    
+    /* Checklist Items */
+    .checklist-item {
+        display: flex;
+        align-items: center;
+        padding: 0.75rem;
+        margin-bottom: 0.5rem;
+        background: #f9fafb;
+        border-radius: 8px;
+        transition: all 0.3s ease;
+    }
+    
+    .checklist-item:hover {
+        background: #f0fdf4;
+    }
+    
+    .checklist-item i {
+        font-size: 1.25rem;
+        margin-right: 1rem;
+    }
+    
+    /* Stats Badge */
+    .stat-badge {
+        display: inline-flex;
+        align-items: center;
+        gap: 0.5rem;
+        padding: 0.5rem 1rem;
+        background: #f0fdf4;
+        border-radius: 50px;
+        margin-right: 0.75rem;
+        margin-bottom: 0.75rem;
+        font-weight: 500;
+        color: #047857;
+    }
+    
+    .stat-badge i {
+        color: #059669;
+    }
+    
+    /* Responsive */
+    @media (max-width: 992px) {
+        .property-hero {
+            height: 50vh;
+        }
+        
+        .hero-price-right {
+            margin-top: 1rem;
+        }
+        
+        .sidebar-card {
+            position: relative;
+            top: 0;
+        }
+        
+        .floating-actions {
+            bottom: 15px;
+            right: 15px;
+        }
+        
+        .floating-btn {
+            width: 50px;
+            height: 50px;
+            font-size: 1.25rem;
+        }
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<!-- Fullscreen Hero -->
+<section class="property-hero">
+    <div class="container">
+        <!-- Breadcrumb -->
+        <nav class="breadcrumb-custom mb-4">
+            <a href="{% url 'property_list' %}">Home</a>
+            <span class="mx-2 text-white">/</span>
+            <a href="{% url 'property_list' %}">Properties</a>
+            <span class="mx-2 text-white">/</span>
+            <span class="text-white">{{ property.title|truncatewords:5 }}</span>
+        </nav>
+        
+        <div class="row align-items-center">
+            <!-- Left: Title Card -->
+            <div class="col-lg-7">
+                <div class="hero-content-left">
+                    <h1 class="display-4 fw-bold mb-3">{{ property.title }}</h1>
+                    <p class="lead mb-3">
+                        <i class="bi bi-geo-alt-fill"></i> {{ property.formatted_address }}
+                    </p>
+                    <div class="d-flex flex-wrap gap-2">
+                        <span class="badge bg-light text-dark px-3 py-2">{{ property.get_property_type_display }}</span>
+                        <span class="badge bg-light text-dark px-3 py-2">{{ property.get_listing_type_display }}</span>
+                        <span class="badge bg-success px-3 py-2">{{ property.get_status_display }}</span>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Right: Price Card -->
+            <div class="col-lg-5">
+                <div class="hero-price-right">
+                    <h2 class="display-3 fw-bold mb-2">{{ property.currency }} {{ property.price|floatformat:0 }}</h2>
+                    {% if property.price_negotiable %}
+                        <p class="mb-0 opacity-75">Price Negotiable</p>
+                    {% endif %}
+                    {% if property.price_per_sqft %}
+                        <p class="mt-2 mb-0 small">{{ property.currency }} {{ property.price_per_sqft|floatformat:2 }} per sqft</p>
+                    {% endif %}
+                    {% if property.price_per_acre %}
+                        <p class="mb-0 small">{{ property.currency }} {{ property.price_per_acre|floatformat:2 }} per acre</p>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- Floating Action Buttons -->
+<div class="floating-actions">
+    <button class="floating-btn" onclick="toggleFavorite({{ property.pk }})" title="Save">
+        <i class="bi bi-heart-fill"></i>
+    </button>
+    <button class="floating-btn" onclick="shareProperty()" title="Share">
+        <i class="bi bi-share-fill"></i>
+    </button>
+</div>
+
+<!-- Main Content -->
+<section class="py-5">
+    <div class="container">
+        <div class="row">
+            <!-- Left Sidebar -->
+            <div class="col-lg-3 order-lg-1 order-3">
+                <!-- Agent Contact Card -->
+                <div class="sidebar-card">
+                    <h5><i class="bi bi-person-badge"></i> Contact Agent</h5>
+                    
+                    {% if property.agent %}
+                        <div class="agent-profile">
+                            <div class="agent-avatar">
+                                <i class="bi bi-person-fill"></i>
+                            </div>
+                            <h6 class="fw-bold mb-1">{{ property.agent.username }}</h6>
+                            <small class="text-muted">Property Agent</small>
+                        </div>
+                    {% endif %}
+                    
+                    <form method="post" action="{% url 'property_inquiry' property.pk %}">
+                        {% csrf_token %}
+                        <div class="mb-3">
+                            <input type="text" class="form-control" name="name" placeholder="Your Name" required>
+                        </div>
+                        <div class="mb-3">
+                            <input type="email" class="form-control" name="email" placeholder="Email" required>
+                        </div>
+                        <div class="mb-3">
+                            <input type="tel" class="form-control" name="phone" placeholder="Phone">
+                        </div>
+                        <div class="mb-3">
+                            <textarea class="form-control" name="message" rows="3" required>I am interested in {{ property.title }}</textarea>
+                        </div>
+                        <button type="submit" class="btn btn-primary w-100">
+                            <i class="bi bi-send"></i> Send Inquiry
+                        </button>
+                    </form>
+                </div>
+                
+                <!-- Property Stats -->
+                <div class="sidebar-card">
+                    <h5><i class="bi bi-bar-chart"></i> Stats</h5>
+                    <div class="stat-badge">
+                        <i class="bi bi-eye-fill"></i>
+                        <span>{{ property.views.count }} Views</span>
+                    </div>
+                    <div class="stat-badge">
+                        <i class="bi bi-heart-fill"></i>
+                        <span>{{ property.favorited_by.count }} Saves</span>
+                    </div>
+                    <div class="stat-badge">
+                        <i class="bi bi-calendar"></i>
+                        <span>{{ property.created_at|timesince }} ago</span>
+                    </div>
+                </div>
+                
+                <!-- Documents -->
+                {% if public_documents %}
+                    <div class="sidebar-card">
+                        <h5><i class="bi bi-file-earmark-pdf"></i> Documents</h5>
+                        {% for doc in public_documents %}
+                            <a href="{{ doc.document.url }}" target="_blank" class="d-block mb-2 text-decoration-none">
+                                <div class="checklist-item">
+                                    <i class="bi bi-download text-success"></i>
+                                    <span>{{ doc.title }}</span>
+                                </div>
+                            </a>
+                        {% endfor %}
+                    </div>
+                {% endif %}
+            </div>
+            
+            <!-- Main Center Content -->
+            <div class="col-lg-6 order-lg-2 order-1 mb-4">
+                <!-- Image Carousel -->
+                <div class="carousel-wrapper">
+                    {% if property.images.exists %}
+                        <div id="propertyCarousel" class="carousel slide" data-bs-ride="carousel">
+                            <div class="carousel-inner">
+                                {% for image in property.images.all %}
+                                    <div class="carousel-item {% if forloop.first %}active{% endif %}">
+                                        <img src="{{ image.image.url }}" alt="{{ image.caption }}" id="mainCarouselImage">
+                                    </div>
+                                {% endfor %}
+                            </div>
+                            <button class="carousel-control-prev" type="button" data-bs-target="#propertyCarousel" data-bs-slide="prev">
+                                <span class="carousel-control-prev-icon"></span>
+                            </button>
+                            <button class="carousel-control-next" type="button" data-bs-target="#propertyCarousel" data-bs-slide="next">
+                                <span class="carousel-control-next-icon"></span>
+                            </button>
+                        </div>
+                        
+                        <!-- Thumbnail Pills -->
+                        <div class="thumbnail-pills">
+                            {% for image in property.images.all|slice:":6" %}
+                                <img src="{{ image.image.url }}" class="thumbnail-pill {% if forloop.first %}active{% endif %}" onclick="changeMainImage('{{ image.image.url }}', this)" alt="{{ image.caption }}">
+                            {% endfor %}
+                        </div>
+                    {% else %}
+                        <div class="bg-secondary d-flex align-items-center justify-content-center" style="height: 500px;">
+                            <i class="bi bi-image display-1 text-white"></i>
+                        </div>
+                    {% endif %}
+                </div>
+                
+                <!-- Accordion Sections -->
+                <div class="accordion detail-accordion" id="propertyAccordion">
+                    <!-- Overview -->
+                    <div class="accordion-item">
+                        <h2 class="accordion-header">
+                            <button class="accordion-button" type="button" data-bs-toggle="collapse" data-bs-target="#overview">
+                                <i class="bi bi-card-text"></i> Overview
+                            </button>
+                        </h2>
+                        <div id="overview" class="accordion-collapse collapse show" data-bs-parent="#propertyAccordion">
+                            <div class="accordion-body">
+                                <p class="lead mb-4">{{ property.description }}</p>
+                                
+                                <div class="feature-grid">
+                                    {% if property.bedrooms %}
+                                        <div class="feature-item">
+                                            <i class="bi bi-door-closed"></i>
+                                            <h5>{{ property.bedrooms }}</h5>
+                                            <p>Bedrooms</p>
+                                        </div>
+                                    {% endif %}
+                                    
+                                    {% if property.bathrooms %}
+                                        <div class="feature-item">
+                                            <i class="bi bi-droplet"></i>
+                                            <h5>{{ property.bathrooms }}</h5>
+                                            <p>Bathrooms</p>
+                                        </div>
+                                    {% endif %}
+                                    
+                                    {% if property.area_sqft %}
+                                        <div class="feature-item">
+                                            <i class="bi bi-rulers"></i>
+                                            <h5>{{ property.area_sqft }}</h5>
+                                            <p>Sqft</p>
+                                        </div>
+                                    {% endif %}
+                                    
+                                    {% if property.land_size_acres %}
+                                        <div class="feature-item">
+                                            <i class="bi bi-grid-3x3"></i>
+                                            <h5>{{ property.land_size_acres }}</h5>
+                                            <p>Acres</p>
+                                        </div>
+                                    {% endif %}
+                                    
+                                    {% if property.parking_spaces %}
+                                        <div class="feature-item">
+                                            <i class="bi bi-car-front"></i>
+                                            <h5>{{ property.parking_spaces }}</h5>
+                                            <p>Parking</p>
+                                        </div>
+                                    {% endif %}
+                                    
+                                    {% if property.year_built %}
+                                        <div class="feature-item">
+                                            <i class="bi bi-calendar-event"></i>
+                                            <h5>{{ property.year_built }}</h5>
+                                            <p>Year Built</p>
+                                        </div>
+                                    {% endif %}
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- Property Details -->
+                    <div class="accordion-item">
+                        <h2 class="accordion-header">
+                            <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#details">
+                                <i class="bi bi-info-circle"></i> Property Details
+                            </button>
+                        </h2>
+                        <div id="details" class="accordion-collapse collapse" data-bs-parent="#propertyAccordion">
+                            <div class="accordion-body">
+                                <div class="row">
+                                    <div class="col-md-6">
+                                        <table class="table table-borderless">
+                                            <tr>
+                                                <td class="fw-bold">Property Type:</td>
+                                                <td>{{ property.get_property_type_display }}</td>
+                                            </tr>
+                                            <tr>
+                                                <td class="fw-bold">Listing Type:</td>
+                                                <td>{{ property.get_listing_type_display }}</td>
+                                            </tr>
+                                            <tr>
+                                                <td class="fw-bold">Status:</td>
+                                                <td><span class="badge bg-success">{{ property.get_status_display }}</span></td>
+                                            </tr>
+                                            {% if property.floor_number %}
+                                                <tr>
+                                                    <td class="fw-bold">Floor:</td>
+                                                    <td>{{ property.floor_number }} of {{ property.total_floors }}</td>
+                                                </tr>
+                                            {% endif %}
+                                        </table>
+                                    </div>
+                                    
+                                    <div class="col-md-6">
+                                        <table class="table table-borderless">
+                                            {% if property.price_per_sqft %}
+                                                <tr>
+                                                    <td class="fw-bold">Price per Sqft:</td>
+                                                    <td>{{ property.currency }} {{ property.price_per_sqft|floatformat:2 }}</td>
+                                                </tr>
+                                            {% endif %}
+                                            {% if property.price_per_acre %}
+                                                <tr>
+                                                    <td class="fw-bold">Price per Acre:</td>
+                                                    <td>{{ property.currency }} {{ property.price_per_acre|floatformat:2 }}</td>
+                                                </tr>
+                                            {% endif %}
+                                            {% if property.annual_property_tax %}
+                                                <tr>
+                                                    <td class="fw-bold">Annual Tax:</td>
+                                                    <td>{{ property.currency }} {{ property.annual_property_tax|floatformat:0 }}</td>
+                                                </tr>
+                                            {% endif %}
+                                            {% if property.available_from %}
+                                                <tr>
+                                                    <td class="fw-bold">Available From:</td>
+                                                    <td>{{ property.available_from }}</td>
+                                                </tr>
+                                            {% endif %}
+                                        </table>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- Land Features -->
+                    {% if property.is_land %}
+                        <div class="accordion-item">
+                            <h2 class="accordion-header">
+                                <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#landFeatures">
+                                    <i class="bi bi-tree"></i> Land Features
+                                </button>
+                            </h2>
+                            <div id="landFeatures" class="accordion-collapse collapse" data-bs-parent="#propertyAccordion">
+                                <div class="accordion-body">
+                                    <div class="row">
+                                        <div class="col-md-6">
+                                            <table class="table table-borderless">
+                                                {% if property.zoning_type %}
+                                                    <tr>
+                                                        <td class="fw-bold">Zoning:</td>
+                                                        <td>{{ property.get_zoning_type_display }}</td>
+                                                    </tr>
+                                                {% endif %}
+                                                {% if property.topography %}
+                                                    <tr>
+                                                        <td class="fw-bold">Topography:</td>
+                                                        <td>{{ property.get_topography_display }}</td>
+                                                    </tr>
+                                                {% endif %}
+                                                {% if property.soil_type %}
+                                                    <tr>
+                                                        <td class="fw-bold">Soil Type:</td>
+                                                        <td>{{ property.get_soil_type_display }}</td>
+                                                    </tr>
+                                                {% endif %}
+                                                {% if property.frontage_feet %}
+                                                    <tr>
+                                                        <td class="fw-bold">Frontage:</td>
+                                                        <td>{{ property.frontage_feet }} feet</td>
+                                                    </tr>
+                                                {% endif %}
+                                            </table>
+                                        </div>
+                                        
+                                        <div class="col-md-6">
+                                            <h6 class="fw-bold mb-3">Utilities & Access:</h6>
+                                            <div class="checklist-item">
+                                                <i class="bi bi-{% if property.has_electricity %}check-circle text-success{% else %}x-circle text-danger{% endif %}"></i>
+                                                <span>Electricity</span>
+                                            </div>
+                                            <div class="checklist-item">
+                                                <i class="bi bi-{% if property.has_water_connection %}check-circle text-success{% else %}x-circle text-danger{% endif %}"></i>
+                                                <span>Water Connection</span>
+                                            </div>
+                                            <div class="checklist-item">
+                                                <i class="bi bi-{% if property.has_road_access %}check-circle text-success{% else %}x-circle text-danger{% endif %}"></i>
+                                                <span>Road Access</span>
+                                            </div>
+                                            <div class="checklist-item">
+                                                <i class="bi bi-{% if property.has_sewer %}check-circle text-success{% else %}x-circle text-danger{% endif %}"></i>
+                                                <span>Sewer</span>
+                                            </div>
+                                            <div class="checklist-item">
+                                                <i class="bi bi-{% if property.has_gas_connection %}check-circle text-success{% else %}x-circle text-danger{% endif %}"></i>
+                                                <span>Gas Connection</span>
+                                            </div>
+                                            
+                                            <h6 class="fw-bold mb-3 mt-4">Land Characteristics:</h6>
+                                            <div class="checklist-item">
+                                                <i class="bi bi-{% if property.is_waterfront %}check-circle text-success{% else %}x-circle text-danger{% endif %}"></i>
+                                                <span>Waterfront</span>
+                                            </div>
+                                            <div class="checklist-item">
+                                                <i class="bi bi-{% if property.is_corner_lot %}check-circle text-success{% else %}x-circle text-danger{% endif %}"></i>
+                                                <span>Corner Lot</span>
+                                            </div>
+                                            <div class="checklist-item">
+                                                <i class="bi bi-{% if property.is_cleared %}check-circle text-success{% else %}x-circle text-danger{% endif %}"></i>
+                                                <span>Cleared Land</span>
+                                            </div>
+                                            <div class="checklist-item">
+                                                <i class="bi bi-{% if property.is_fenced %}check-circle text-success{% else %}x-circle text-danger{% endif %}"></i>
+                                                <span>Fenced</span>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    {% endif %}
+                    
+                    <!-- Features & Amenities -->
+                    <div class="accordion-item">
+                        <h2 class="accordion-header">
+                            <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#features">
+                                <i class="bi bi-star"></i> Features & Amenities
+                            </button>
+                        </h2>
+                        <div id="features" class="accordion-collapse collapse" data-bs-parent="#propertyAccordion">
+                            <div class="accordion-body">
+                                <div class="row">
+                                    <div class="col-md-6">
+                                        {% if property.has_parking %}
+                                            <div class="checklist-item">
+                                                <i class="bi bi-check-circle text-success"></i>
+                                                <span>Parking ({{ property.parking_spaces }} spaces)</span>
+                                            </div>
+                                        {% endif %}
+                                        {% if property.has_swimming_pool %}
+                                            <div class="checklist-item">
+                                                <i class="bi bi-check-circle text-success"></i>
+                                                <span>Swimming Pool</span>
+                                            </div>
+                                        {% endif %}
+                                        {% if property.has_garden %}
+                                            <div class="checklist-item">
+                                                <i class="bi bi-check-circle text-success"></i>
+                                                <span>Garden</span>
+                                            </div>
+                                        {% endif %}
+                                        {% if property.has_gym %}
+                                            <div class="checklist-item">
+                                                <i class="bi bi-check-circle text-success"></i>
+                                                <span>Gym/Fitness Center</span>
+                                            </div>
+                                        {% endif %}
+                                        {% if property.has_balcony %}
+                                            <div class="checklist-item">
+                                                <i class="bi bi-check-circle text-success"></i>
+                                                <span>Balcony</span>
+                                            </div>
+                                        {% endif %}
+                                        {% if property.has_elevator %}
+                                            <div class="checklist-item">
+                                                <i class="bi bi-check-circle text-success"></i>
+                                                <span>Elevator</span>
+                                            </div>
+                                        {% endif %}
+                                    </div>
+                                    
+                                    <div class="col-md-6">
+                                        {% if property.has_security %}
+                                            <div class="checklist-item">
+                                                <i class="bi bi-check-circle text-success"></i>
+                                                <span>24/7 Security</span>
+                                            </div>
+                                        {% endif %}
+                                        {% if property.has_air_conditioning %}
+                                            <div class="checklist-item">
+                                                <i class="bi bi-check-circle text-success"></i>
+                                                <span>Air Conditioning</span>
+                                            </div>
+                                        {% endif %}
+                                        {% if property.has_heating %}
+                                            <div class="checklist-item">
+                                                <i class="bi bi-check-circle text-success"></i>
+                                                <span>Heating System</span>
+                                            </div>
+                                        {% endif %}
+                                        {% if property.is_furnished %}
+                                            <div class="checklist-item">
+                                                <i class="bi bi-check-circle text-success"></i>
+                                                <span>Furnished</span>
+                                            </div>
+                                        {% endif %}
+                                        {% if property.pets_allowed %}
+                                            <div class="checklist-item">
+                                                <i class="bi bi-check-circle text-success"></i>
+                                                <span>Pets Allowed</span>
+                                            </div>
+                                        {% endif %}
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- Location Map -->
+                    <div class="accordion-item">
+                        <h2 class="accordion-header">
+                            <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#location">
+                                <i class="bi bi-map"></i> Location
+                            </button>
+                        </h2>
+                        <div id="location" class="accordion-collapse collapse" data-bs-parent="#propertyAccordion">
+                            <div class="accordion-body">
+                                <div id="propertyMap" class="map-wrapper"></div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Right Sidebar -->
+            <div class="col-lg-3 order-lg-3 order-2">
+                <!-- Quick Facts Box -->
+                <div class="quick-facts">
+                    <h5>Quick Facts</h5>
+                    {% if property.bedrooms %}
+                        <div class="fact-item">
+                            <span>Bedrooms</span>
+                            <strong>{{ property.bedrooms }}</strong>
+                        </div>
+                    {% endif %}
+                    {% if property.bathrooms %}
+                        <div class="fact-item">
+                            <span>Bathrooms</span>
+                            <strong>{{ property.bathrooms }}</strong>
+                        </div>
+                    {% endif %}
+                    {% if property.area_sqft %}
+                        <div class="fact-item">
+                            <span>Area</span>
+                            <strong>{{ property.area_sqft }} sqft</strong>
+                        </div>
+                    {% endif %}
+                    {% if property.year_built %}
+                        <div class="fact-item">
+                            <span>Year Built</span>
+                            <strong>{{ property.year_built }}</strong>
+                        </div>
+                    {% endif %}
+                    <div class="fact-item">
+                        <span>Type</span>
+                        <strong>{{ property.get_property_type_display }}</strong>
+                    </div>
+                    <div class="fact-item">
+                        <span>Status</span>
+                        <strong>{{ property.get_status_display }}</strong>
+                    </div>
+                </div>
+                
+                <!-- Similar Properties -->
+                {% if similar_properties %}
+                    <div class="sidebar-card">
+                        <h5><i class="bi bi-houses"></i> Similar</h5>
+                        {% for similar in similar_properties %}
+                            <div class="similar-property-card">
+                                {% if similar.images.exists %}
+                                    <img src="{{ similar.images.first.image.url }}" alt="{{ similar.title }}">
+                                {% else %}
+                                    <div class="bg-secondary d-flex align-items-center justify-content-center" style="height: 150px;">
+                                        <i class="bi bi-house-door display-4 text-white"></i>
+                                    </div>
+                                {% endif %}
+                                <div class="card-body">
+                                    <h6 class="mb-2">{{ similar.title|truncatewords:8 }}</h6>
+                                    <div class="text-success fw-bold mb-2">
+                                        {{ similar.currency }} {{ similar.price|floatformat:0 }}
+                                    </div>
+                                    <p class="text-muted small mb-2">
+                                        <i class="bi bi-geo-alt"></i> {{ similar.city }}
+                                    </p>
+                                    <a href="{% url 'property_detail' similar.pk %}" class="btn btn-sm btn-outline-success w-100">
+                                        View Details
+                                    </a>
+                                </div>
+                            </div>
+                        {% endfor %}
+                    </div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- Google Maps Script -->
+<script src="https://maps.googleapis.com/maps/api/js?key=YOUR_GOOGLE_MAPS_API_KEY&callback=initPropertyMap" async defer></script>
+
+<script>
+function initPropertyMap() {
+    const propertyLat = parseFloat("{{ property.latitude }}");
+    const propertyLng = parseFloat("{{ property.longitude }}");
+    
+    const map = new google.maps.Map(document.getElementById('propertyMap'), {
+        center: { lat: propertyLat, lng: propertyLng },
+        zoom: 15,
+        mapTypeControl: true,
+        streetViewControl: true
+    });
+    
+    const marker = new google.maps.Marker({
+        position: { lat: propertyLat, lng: propertyLng },
+        map: map,
+        title: "{{ property.title|escapejs }}",
+        animation: google.maps.Animation.DROP
+    });
+    
+    const infoWindow = new google.maps.InfoWindow({
+        content: `
+            <div style="padding: 10px;">
+                <h6 style="margin: 0 0 8px 0;">{{ property.title|escapejs }}</h6>
+                <p style="margin: 0; color: #059669; font-weight: 600;">{{ property.currency }} {{ property.price|floatformat:0 }}</p>
+                <p style="margin: 4px 0 0 0; font-size: 0.9rem; color: #6c757d;">{{ property.city|escapejs }}, {{ property.country|escapejs }}</p>
+            </div>
+        `
+    });
+    
+    marker.addListener('click', () => {
+        infoWindow.open(map, marker);
+    });
+}
+
+function changeMainImage(imageUrl, element) {
+    // Update carousel to show selected image
+    const carousel = bootstrap.Carousel.getInstance(document.getElementById('propertyCarousel'));
+    const thumbnails = document.querySelectorAll('.thumbnail-pill');
+    thumbnails.forEach(thumb => thumb.classList.remove('active'));
+    element.classList.add('active');
+    
+    // Find and go to the matching carousel item
+    const carouselItems = document.querySelectorAll('#propertyCarousel .carousel-item img');
+    carouselItems.forEach((img, index) => {
+        if (img.src === imageUrl) {
+            carousel.to(index);
+        }
+    });
+}
+
+function toggleFavorite(propertyId) {
+    fetch('/api/favorite/' + propertyId + '/', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+            'X-CSRFToken': '{{ csrf_token }}'
+        }
+    })
+    .then(response => response.json())
+    .then(data => {
+        alert(data.message || 'Favorite updated!');
+    })
+    .catch(error => {
+        console.error('Error:', error);
+        alert('Please login to save favorites');
+    });
+}
+
+function shareProperty() {
+    const url = window.location.href;
+    const title = "{{ property.title|escapejs }}";
+    
+    if (navigator.share) {
+        navigator.share({
+            title: title,
+            url: url
+        }).catch(err => console.log('Share failed', err));
+    } else {
+        navigator.clipboard.writeText(url).then(() => {
+            alert('Property link copied to clipboard!');
+        });
+    }
+}
+</script>
+{% endblock %}

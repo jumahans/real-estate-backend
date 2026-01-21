@@ -1,0 +1,148 @@
+{% extends 'properties/base.html' %}
+{% load static %}
+
+{% block title %}My Favorite Properties{% endblock %}
+
+{% block content %}
+<section class="bg-light py-5">
+    <div class="container">
+        <h1 class="display-5 fw-bold mb-3">
+            <i class="bi bi-heart-fill text-danger"></i> My Favorite Properties
+        </h1>
+        <p class="lead text-muted">Properties you've saved for later</p>
+    </div>
+</section>
+
+<section class="py-5">
+    <div class="container">
+        {% if favorites %}
+            <div class="d-flex justify-content-between align-items-center mb-4">
+                <h4 class="mb-0">{{ favorites|length }} Saved Properties</h4>
+            </div>
+
+            <div class="row g-4">
+                {% for favorite in favorites %}
+                    {% with property=favorite.property %}
+                        <div class="col-md-6 col-lg-4">
+                            <div class="card property-card h-100">
+                                <div class="position-relative">
+                                    {% if property.images.all %}
+                                        {% with property.images.all.0 as first_image %}
+                                            <img src="{{ first_image.image.url }}" class="card-img-top" alt="{{ property.title }}">
+                                        {% endwith %}
+                                    {% else %}
+                                        <img src="https://via.placeholder.com/400x250?text=No+Image" class="card-img-top" alt="No image">
+                                    {% endif %}
+                                    
+                                    <form method="post" action="{% url 'property_favorite_toggle' property.pk %}" class="d-inline">
+                                        {% csrf_token %}
+                                        <button type="submit" class="favorite-btn">
+                                            <i class="bi bi-heart-fill text-danger"></i>
+                                        </button>
+                                    </form>
+
+                                    <span class="badge bg-primary position-absolute top-0 start-0 m-2">
+                                        {{ property.get_listing_type_display }}
+                                    </span>
+                                </div>
+                                
+                                <div class="card-body">
+                                    <h5 class="card-title">
+                                        <a href="{% url 'property_detail' property.pk %}" class="text-decoration-none text-dark">
+                                            {{ property.title|truncatewords:8 }}
+                                        </a>
+                                    </h5>
+                                    
+                                    <p class="property-price mb-2">
+                                        {{ property.currency }} {{ property.price|floatformat:0 }}
+                                    </p>
+                                    
+                                    <p class="text-muted small mb-3">
+                                        <i class="bi bi-geo-alt"></i> {{ property.city }}, {{ property.state }}
+                                    </p>
+                                    
+                                    <div class="d-flex gap-3 text-muted small mb-3">
+                                        {% if not property.is_land %}
+                                            {% if property.bedrooms %}
+                                                <span><i class="bi bi-door-closed"></i> {{ property.bedrooms }} Beds</span>
+                                            {% endif %}
+                                            {% if property.bathrooms %}
+                                                <span><i class="bi bi-droplet"></i> {{ property.bathrooms }} Baths</span>
+                                            {% endif %}
+                                        {% else %}
+                                            {% if property.land_size_acres %}
+                                                <span><i class="bi bi-geo"></i> {{ property.land_size_acres }} acres</span>
+                                            {% endif %}
+                                        {% endif %}
+                                    </div>
+
+                                    {% if favorite.notes %}
+                                        <div class="alert alert-info py-2 px-3 small mb-3">
+                                            <strong>Your Notes:</strong> {{ favorite.notes|truncatewords:15 }}
+                                        </div>
+                                    {% endif %}
+
+                                    <div class="mt-3">
+                                        <span class="badge badge-custom bg-light text-dark">{{ property.get_property_type_display }}</span>
+                                        <small class="text-muted d-block mt-2">
+                                            <i class="bi bi-clock"></i> Saved {{ favorite.added_at|timesince }} ago
+                                        </small>
+                                    </div>
+                                </div>
+                                
+                                <div class="card-footer bg-white border-top-0">
+                                    <div class="d-grid gap-2">
+                                        <a href="{% url 'property_detail' property.pk %}" class="btn btn-outline-primary">
+                                            View Details <i class="bi bi-arrow-right"></i>
+                                        </a>
+                                        <a href="{% url 'property_inquiry_create' property.pk %}" class="btn btn-primary">
+                                            <i class="bi bi-envelope"></i> Contact
+                                        </a>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    {% endwith %}
+                {% endfor %}
+            </div>
+
+            <!-- Pagination -->
+            {% if favorites.has_other_pages %}
+                <nav aria-label="Page navigation" class="mt-5">
+                    <ul class="pagination justify-content-center">
+                        {% if favorites.has_previous %}
+                            <li class="page-item">
+                                <a class="page-link" href="?page={{ favorites.previous_page_number }}">
+                                    <i class="bi bi-chevron-left"></i>
+                                </a>
+                            </li>
+                        {% endif %}
+
+                        <li class="page-item active">
+                            <span class="page-link">Page {{ favorites.number }} of {{ favorites.paginator.num_pages }}</span>
+                        </li>
+
+                        {% if favorites.has_next %}
+                            <li class="page-item">
+                                <a class="page-link" href="?page={{ favorites.next_page_number }}">
+                                    <i class="bi bi-chevron-right"></i>
+                                </a>
+                            </li>
+                        {% endif %}
+                    </ul>
+                </nav>
+            {% endif %}
+
+        {% else %}
+            <div class="text-center py-5">
+                <i class="bi bi-heart display-1 text-muted"></i>
+                <h3 class="mt-3">No Favorites Yet</h3>
+                <p class="text-muted">Start saving properties you like to view them here</p>
+                <a href="{% url 'property_list' %}" class="btn btn-primary mt-3">
+                    <i class="bi bi-search"></i> Browse Properties
+                </a>
+            </div>
+        {% endif %}
+    </div>
+</section>
+{% endblock %}

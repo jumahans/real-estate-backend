@@ -1,0 +1,118 @@
+{% extends 'properties/base.html' %}
+{% load static %}
+
+{% block title %}Nearby Properties{% endblock %}
+
+{% block content %}
+<section class="bg-light py-5">
+    <div class="container">
+        <h1 class="display-5 fw-bold mb-3">Find Properties Near You</h1>
+        <p class="lead text-muted">Search properties within a specific radius</p>
+    </div>
+</section>
+
+<section class="py-5">
+    <div class="container">
+        <div class="search-box mb-5">
+            <h5 class="mb-4"><i class="bi bi-geo-alt"></i> Location Search</h5>
+            <form method="get">
+                <div class="row g-3">
+                    <div class="col-md-4">
+                        <label class="form-label">Latitude</label>
+                        <input type="number" step="0.000001" class="form-control" name="lat" placeholder="Enter latitude" value="{{ search_lat }}" required>
+                    </div>
+                    <div class="col-md-4">
+                        <label class="form-label">Longitude</label>
+                        <input type="number" step="0.000001" class="form-control" name="lng" placeholder="Enter longitude" value="{{ search_lng }}" required>
+                    </div>
+                    <div class="col-md-2">
+                        <label class="form-label">Radius (miles)</label>
+                        <input type="number" step="0.1" class="form-control" name="radius" placeholder="10" value="{{ radius|default:'10' }}">
+                    </div>
+                    <div class="col-md-2">
+                        <label class="form-label">&nbsp;</label>
+                        <button type="submit" class="btn btn-primary w-100">
+                            <i class="bi bi-search"></i> Search
+                        </button>
+                    </div>
+                </div>
+            </form>
+        </div>
+
+        {% if nearby_properties %}
+            <h4 class="mb-4">{{ nearby_properties|length }} Properties Found</h4>
+            
+            <div class="row g-4">
+                {% for item in nearby_properties %}
+                    {% with property=item.property %}
+                        <div class="col-md-6 col-lg-4">
+                            <div class="card property-card h-100">
+                                <div class="position-relative">
+                                    {% if property.images.all %}
+                                        {% with property.images.all.0 as first_image %}
+                                            <img src="{{ first_image.image.url }}" class="card-img-top" alt="{{ property.title }}">
+                                        {% endwith %}
+                                    {% else %}
+                                        <img src="https://via.placeholder.com/400x250?text=No+Image" class="card-img-top" alt="No image">
+                                    {% endif %}
+                                    
+                                    <span class="badge bg-success position-absolute top-0 start-0 m-2">
+                                        {{ item.distance_miles }} miles away
+                                    </span>
+                                    
+                                    <span class="badge bg-primary position-absolute top-0 end-0 m-2">
+                                        {{ property.get_listing_type_display }}
+                                    </span>
+                                </div>
+                                
+                                <div class="card-body">
+                                    <h5 class="card-title">
+                                        <a href="{% url 'property_detail' property.pk %}" class="text-decoration-none text-dark">
+                                            {{ property.title|truncatewords:8 }}
+                                        </a>
+                                    </h5>
+                                    
+                                    <p class="property-price mb-2">
+                                        {{ property.currency }} {{ property.price|floatformat:0 }}
+                                    </p>
+                                    
+                                    <p class="text-muted small mb-3">
+                                        <i class="bi bi-geo-alt"></i> {{ property.city }}, {{ property.state }}
+                                    </p>
+                                    
+                                    <div class="d-flex gap-3 text-muted small">
+                                        {% if not property.is_land %}
+                                            {% if property.bedrooms %}
+                                                <span><i class="bi bi-door-closed"></i> {{ property.bedrooms }} Beds</span>
+                                            {% endif %}
+                                            {% if property.bathrooms %}
+                                                <span><i class="bi bi-droplet"></i> {{ property.bathrooms }} Baths</span>
+                                            {% endif %}
+                                        {% else %}
+                                            {% if property.land_size_acres %}
+                                                <span><i class="bi bi-geo"></i> {{ property.land_size_acres }} acres</span>
+                                            {% endif %}
+                                        {% endif %}
+                                    </div>
+                                </div>
+                                
+                                <div class="card-footer bg-white border-top-0">
+                                    <a href="{% url 'property_detail' property.pk %}" class="btn btn-outline-primary w-100">
+                                        View Details <i class="bi bi-arrow-right"></i>
+                                    </a>
+                                </div>
+                            </div>
+                        </div>
+                    {% endwith %}
+                {% endfor %}
+            </div>
+        {% else %}
+            <div class="text-center py-5">
+                <i class="bi bi-geo-alt display-1 text-muted"></i>
+                <h3 class="mt-3">No Nearby Properties</h3>
+                <p class="text-muted">Try increasing the search radius or changing your location</p>
+            </div>
+        {% endif %}
+    </div>
+</section>
+{% endblock %}

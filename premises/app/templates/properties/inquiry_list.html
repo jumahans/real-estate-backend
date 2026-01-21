@@ -1,0 +1,138 @@
+{% extends "properties/base.html" %}
+
+{% block title %}My Inquiries{% endblock title %}
+
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <h1 class="h3 mb-0">📧 My Property Inquiries</h1>
+    <a href="{% url 'property_dashboard' %}" class="btn btn-outline-secondary">
+        <i class="bi bi-house-door"></i> Dashboard
+    </a>
+</div>
+
+<!-- Status filter -->
+<div class="card border-0 shadow-sm mb-4">
+    <div class="card-body p-3">
+        <form method="get" class="d-flex gap-2">
+            <select name="status" class="form-select" onchange="this.form.submit()">
+                <option value="">All Statuses</option>
+                {% for value, label in status_choices %}
+                    <option value="{{ value }}" 
+                            {% if request.GET.status == value %}selected{% endif %}>
+                        {{ label }}
+                    </option>
+                {% endfor %}
+            </select>
+        </form>
+    </div>
+</div>
+
+<!-- Inquiries table -->
+<div class="card border-0 shadow-lg">
+    <div class="table-responsive">
+        <table class="table table-hover mb-0">
+            <thead class="table-light">
+                <tr>
+                    <th>Date</th>
+                    <th>Property</th>
+                    <th>Inquirer</th>
+                    <th>Phone</th>
+                    <th>Status</th>
+                    <th>Actions</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for inquiry in inquiries %}
+                    <tr class="{% if inquiry.status == 'new' %}table-warning{% endif %}">
+                        <td>
+                            <strong>{{ inquiry.created_at|date:"M d, Y" }}</strong><br>
+                            <small class="text-muted">{{ inquiry.created_at|time:"H:i" }}</small>
+                        </td>
+                        <td>
+                            <a href="{% url 'property_detail' inquiry.property.pk %}" class="fw-semibold">
+                                {{ inquiry.property.title }}
+                            </a><br>
+                            <small class="text-muted">{{ inquiry.property.city }}</small>
+                        </td>
+                        <td>
+                            <strong>{{ inquiry.inquirer_name }}</strong><br>
+                            <a href="mailto:{{ inquiry.inquirer_email }}">{{ inquiry.inquirer_email }}</a>
+                        </td>
+                        <td>
+                            {% if inquiry.inquirer_phone %}
+                                <a href="tel:{{ inquiry.inquirer_phone }}" class="text-decoration-none">
+                                    {{ inquiry.inquirer_phone }}
+                                </a>
+                            {% else %}
+                                <span class="text-muted">—</span>
+                            {% endif %}
+                        </td>
+                        <td>
+                            <span class="badge 
+                                {% if inquiry.status == 'new' %}bg-warning text-dark
+                                {% elif inquiry.status == 'contacted' %}bg-info
+                                {% elif inquiry.status == 'scheduled' %}bg-primary
+                                {% else %}bg-success{% endif %}">
+                                {{ inquiry.get_status_display }}
+                            </span>
+                            {% if inquiry.responded_at %}
+                                <br><small class="text-muted">
+                                    Responded: {{ inquiry.responded_at|date:"M d" }}
+                                </small>
+                            {% endif %}
+                        </td>
+                        <td>
+                            <div class="btn-group btn-group-sm" role="group">
+                                <a href="{% url 'inquiry_detail' inquiry.pk %}" 
+                                   class="btn btn-outline-primary">
+                                    <i class="bi bi-eye"></i> View
+                                </a>
+                                <a href="mailto:{{ inquiry.inquirer_email }}?subject=Re: {{ inquiry.property.title }}"
+                                   class="btn btn-outline-success">
+                                    <i class="bi bi-envelope"></i> Email
+                                </a>
+                            </div>
+                        </td>
+                    </tr>
+                {% empty %}
+                    <tr>
+                        <td colspan="6" class="text-center py-5">
+                            <i class="bi bi-inbox display-4 text-muted mb-3 d-block"></i>
+                            <h5 class="text-muted">No inquiries yet</h5>
+                            <p class="text-muted">
+                                Inquiries from interested buyers/renters will appear here.
+                            </p>
+                            <a href="{% url 'property_list' %}" class="btn btn-primary">
+                                List Your Properties
+                            </a>
+                        </td>
+                    </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+
+<!-- Pagination -->
+{% if inquiries.has_other_pages %}
+    <nav class="mt-5">
+        <ul class="pagination justify-content-center">
+            {% if inquiries.has_previous %}
+                <li class="page-item">
+                    <a class="page-link" href="?page=1{% if request.GET.status %}&status={{ request.GET.status }}{% endif %}">First</a>
+                </li>
+            {% endif %}
+            <!-- Simplified pagination -->
+            <li class="page-item {% if not inquiries.has_previous %}disabled{% endif %}">
+                <a class="page-link" href="?page={{ inquiries.previous_page_number }}{% if request.GET.status %}&status={{ request.GET.status }}{% endif %}">Previous</a>
+            </li>
+            <li class="page-item active">
+                <span class="page-link">{{ inquiries.number }} of {{ inquiries.paginator.num_pages }}</span>
+            </li>
+            <li class="page-item {% if not inquiries.has_next %}disabled{% endif %}">
+                <a class="page-link" href="?page={{ inquiries.next_page_number }}{% if request.GET.status %}&status={{ request.GET.status }}{% endif %}">Next</a>
+            </li>
+        </ul>
+    </nav>
+{% endif %}
+{% endblock content %}

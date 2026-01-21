@@ -1,0 +1,558 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="Find your dream property - Houses, Lands, Apartments for Sale and Rent">
+    <title>{% block title %}Property Listings{% endblock %} | ArthyProperties</title>
+    
+    <link rel="stylesheet" href="{% static 'properties/css/bootstrap.min.css' %}">
+    <link rel="stylesheet" href="{% static 'properties/css/style.css' %}">
+    
+    <style>
+        :root {
+            --primary-green: #059669;
+            --dark-green: #047857;
+            --light-green: #d1fae5;
+            --dark-bg: #1e293b;
+        }
+        
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            margin: 0;
+            padding: 0;
+            overflow-x: hidden;
+        }
+        
+        /* Vertical Sidebar */
+        .sidebar-nav {
+            position: fixed;
+            left: 0;
+            top: 0;
+            width: 280px;
+            height: 100vh;
+            background: linear-gradient(180deg, var(--dark-bg) 0%, #0f172a 100%);
+            padding: 2rem 0;
+            z-index: 1000;
+            overflow-y: auto;
+            box-shadow: 4px 0 15px rgba(0,0,0,0.1);
+        }
+        
+        .sidebar-logo {
+            text-align: center;
+            padding: 0 1.5rem 2rem;
+            border-bottom: 1px solid rgba(255,255,255,0.1);
+            margin-bottom: 2rem;
+        }
+        
+        .sidebar-logo h3 {
+            color: white;
+            font-size: 1.5rem;
+            font-weight: 700;
+            margin: 0.5rem 0 0;
+        }
+        
+        .sidebar-logo i {
+            font-size: 3rem;
+            color: var(--primary-green);
+        }
+        
+        .sidebar-menu {
+            list-style: none;
+            padding: 0;
+            margin: 0;
+        }
+        
+        .sidebar-menu li {
+            margin-bottom: 0.5rem;
+        }
+        
+        .sidebar-menu a {
+            display: flex;
+            align-items: center;
+            padding: 1rem 1.5rem;
+            color: rgba(255,255,255,0.8);
+            text-decoration: none;
+            transition: all 0.3s ease;
+            font-weight: 500;
+        }
+        
+        .sidebar-menu a:hover {
+            background: rgba(5, 150, 105, 0.1);
+            color: var(--light-green);
+            padding-left: 2rem;
+        }
+        
+        .sidebar-menu a i {
+            font-size: 1.5rem;
+            margin-right: 1rem;
+            width: 30px;
+        }
+        
+        .sidebar-menu .dropdown-toggle::after {
+            margin-left: auto;
+        }
+        
+        .sidebar-menu .dropdown-menu {
+            background: rgba(0,0,0,0.3);
+            border: none;
+            margin-left: 1.5rem;
+            width: calc(100% - 3rem);
+        }
+        
+        .sidebar-menu .dropdown-item {
+            color: rgba(255,255,255,0.7);
+            padding: 0.75rem 1.5rem;
+        }
+        
+        .sidebar-menu .dropdown-item:hover {
+            background: rgba(5, 150, 105, 0.2);
+            color: white;
+        }
+        
+        .sidebar-footer {
+            position: absolute;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            padding: 1.5rem;
+            border-top: 1px solid rgba(255,255,255,0.1);
+            background: rgba(0,0,0,0.3);
+        }
+        
+        .sidebar-footer .social-links {
+            display: flex;
+            justify-content: center;
+            gap: 1rem;
+            margin-top: 1rem;
+        }
+        
+        .sidebar-footer .social-links a {
+            color: rgba(255,255,255,0.6);
+            font-size: 1.25rem;
+            transition: all 0.3s ease;
+        }
+        
+        .sidebar-footer .social-links a:hover {
+            color: var(--primary-green);
+            transform: translateY(-3px);
+        }
+        
+        /* Main Content Area */
+        .main-wrapper {
+            margin-left: 280px;
+            min-height: 100vh;
+            background: #f8fafc;
+        }
+        
+        /* Top Info Bar */
+        .top-info-bar {
+            background: white;
+            padding: 1rem 2rem;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.05);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        
+        .contact-info {
+            display: flex;
+            gap: 2rem;
+            color: #64748b;
+            font-size: 0.9rem;
+        }
+        
+        .contact-info i {
+            color: var(--primary-green);
+            margin-right: 0.5rem;
+        }
+        
+        .user-actions {
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+        }
+        
+        .user-actions .btn {
+            border-radius: 50px;
+            padding: 0.5rem 1.5rem;
+        }
+        
+        .user-actions .dropdown-toggle {
+            background: var(--light-green);
+            color: var(--dark-green);
+            border: none;
+            font-weight: 600;
+        }
+        
+        /* Content Container */
+        main {
+            padding: 2rem;
+            min-height: calc(100vh - 200px);
+        }
+        
+        /* Footer */
+        footer {
+            background: var(--dark-bg);
+            color: white;
+            padding: 3rem 2rem 1.5rem;
+            margin-top: 4rem;
+        }
+        
+        .footer-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 2rem;
+            margin-bottom: 2rem;
+        }
+        
+        .footer-section h6 {
+            color: var(--light-green);
+            font-weight: 600;
+            margin-bottom: 1rem;
+        }
+        
+        .footer-section a {
+            color: rgba(255,255,255,0.7);
+            text-decoration: none;
+            display: block;
+            padding: 0.5rem 0;
+            transition: all 0.3s ease;
+        }
+        
+        .footer-section a:hover {
+            color: var(--light-green);
+            padding-left: 0.5rem;
+        }
+        
+        .footer-bottom {
+            text-align: center;
+            padding-top: 2rem;
+            border-top: 1px solid rgba(255,255,255,0.1);
+            color: rgba(255,255,255,0.5);
+        }
+        
+        /* Property Cards */
+        .property-card {
+            background: white;
+            border-radius: 16px;
+            overflow: hidden;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.08);
+            transition: all 0.3s ease;
+        }
+        
+        .property-card:hover {
+            transform: translateY(-8px);
+            box-shadow: 0 12px 30px rgba(5, 150, 105, 0.15);
+        }
+        
+        .property-card img {
+            width: 100%;
+            height: 250px;
+            object-fit: cover;
+        }
+        
+        .property-price {
+            color: var(--primary-green);
+            font-size: 1.5rem;
+            font-weight: 700;
+        }
+        
+        .favorite-btn {
+            position: absolute;
+            top: 15px;
+            right: 15px;
+            background: white;
+            border: none;
+            border-radius: 50%;
+            width: 45px;
+            height: 45px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.2);
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+        
+        .favorite-btn:hover {
+            transform: scale(1.15);
+            background: var(--primary-green);
+        }
+        
+        .favorite-btn:hover i {
+            color: white;
+        }
+        
+        .favorite-btn i {
+            font-size: 1.25rem;
+            color: #dc3545;
+        }
+        
+        /* Buttons */
+        .btn-primary {
+            background: var(--primary-green);
+            border: none;
+            border-radius: 50px;
+            padding: 0.75rem 2rem;
+            font-weight: 600;
+            transition: all 0.3s ease;
+        }
+        
+        .btn-primary:hover {
+            background: var(--dark-green);
+            transform: translateY(-2px);
+            box-shadow: 0 8px 20px rgba(5, 150, 105, 0.3);
+        }
+        
+        /* Messages */
+        .alert {
+            border-radius: 12px;
+            border: none;
+        }
+        
+        /* Mobile Sidebar Toggle */
+        .mobile-toggle {
+            display: none;
+            position: fixed;
+            top: 1rem;
+            left: 1rem;
+            z-index: 1001;
+            background: var(--primary-green);
+            color: white;
+            border: none;
+            width: 50px;
+            height: 50px;
+            border-radius: 50%;
+            font-size: 1.5rem;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.2);
+        }
+        
+        /* Responsive */
+        @media (max-width: 992px) {
+            .sidebar-nav {
+                transform: translateX(-100%);
+                transition: transform 0.3s ease;
+            }
+            
+            .sidebar-nav.show {
+                transform: translateX(0);
+            }
+            
+            .main-wrapper {
+                margin-left: 0;
+            }
+            
+            .mobile-toggle {
+                display: block;
+            }
+            
+            .top-info-bar {
+                padding-left: 5rem;
+            }
+            
+            .contact-info {
+                display: none;
+            }
+        }
+        
+        @media (max-width: 576px) {
+            main {
+                padding: 1rem;
+            }
+            
+            .top-info-bar {
+                flex-direction: column;
+                gap: 1rem;
+            }
+        }
+    </style>
+    
+    {% block extra_css %}{% endblock %}
+</head>
+<body>
+    
+    <!-- Mobile Toggle -->
+    <button class="mobile-toggle" onclick="toggleSidebar()">
+        <i class="bi bi-list"></i>
+    </button>
+    
+    <!-- Vertical Sidebar Navigation -->
+    <aside class="sidebar-nav" id="sidebar">
+        <div class="sidebar-logo">
+            <i class="bi bi-building"></i>
+            <h3>ArthyProperties</h3>
+            <small class="text-white-50">Find Your Dream Home</small>
+        </div>
+        
+        <ul class="sidebar-menu">
+            <li>
+                <a href="{% url 'property_list' %}">
+                    <i class="bi bi-grid"></i>
+                    <span>Browse Properties</span>
+                </a>
+            </li>
+            <li>
+                <a href="{% url 'property_featured' %}">
+                    <i class="bi bi-star"></i>
+                    <span>Featured</span>
+                </a>
+            </li>
+            <li>
+                <a href="{% url 'property_latest' %}">
+                    <i class="bi bi-clock-history"></i>
+                    <span>Latest Listings</span>
+                </a>
+            </li>
+            <li class="dropdown">
+                <a href="#" class="dropdown-toggle" data-bs-toggle="dropdown">
+                    <i class="bi bi-building"></i>
+                    <span>Property Types</span>
+                </a>
+                <ul class="dropdown-menu">
+                    <li><a class="dropdown-item" href="{% url 'property_by_type' 'house' %}">Houses</a></li>
+                    <li><a class="dropdown-item" href="{% url 'property_by_type' 'apartment' %}">Apartments</a></li>
+                    <li><a class="dropdown-item" href="{% url 'property_by_type' 'villa' %}">Villas</a></li>
+                    <li><a class="dropdown-item" href="{% url 'property_by_type' 'residential_land' %}">Residential Land</a></li>
+                    <li><a class="dropdown-item" href="{% url 'property_by_type' 'commercial_land' %}">Commercial Land</a></li>
+                    <li><a class="dropdown-item" href="{% url 'property_by_type' 'agricultural_land' %}">Agricultural Land</a></li>
+                </ul>
+            </li>
+            <li>
+                <a href="{% url 'property_search' %}">
+                    <i class="bi bi-search"></i>
+                    <span>Advanced Search</span>
+                </a>
+            </li>
+            {% if user.is_authenticated %}
+                <li>
+                    <a href="{% url 'favorite_list' %}">
+                        <i class="bi bi-heart-fill"></i>
+                        <span>My Favorites</span>
+                    </a>
+                </li>
+                <li>
+                    <a href="{% url 'property_dashboard' %}">
+                        <i class="bi bi-speedometer2"></i>
+                        <span>Dashboard</span>
+                    </a>
+                </li>
+                <li>
+                    <a href="{% url 'inquiry_list' %}">
+                        <i class="bi bi-envelope"></i>
+                        <span>My Inquiries</span>
+                    </a>
+                </li>
+            {% endif %}
+        </ul>
+        
+        <div class="sidebar-footer">
+            <div class="text-center text-white-50 small">
+                <p class="mb-1"><i class="bi bi-telephone"></i> +1 234 567 8900</p>
+                <p class="mb-0"><i class="bi bi-envelope"></i> info@arthyproperties.com</p>
+            </div>
+            <div class="social-links">
+                <a href="#"><i class="bi bi-facebook"></i></a>
+                <a href="#"><i class="bi bi-twitter"></i></a>
+                <a href="#"><i class="bi bi-instagram"></i></a>
+                <a href="#"><i class="bi bi-linkedin"></i></a>
+            </div>
+        </div>
+    </aside>
+    
+    <!-- Main Content Wrapper -->
+    <div class="main-wrapper">
+        <!-- Top Info Bar -->
+        <div class="top-info-bar">
+            <div class="contact-info">
+                <span><i class="bi bi-telephone-fill"></i> +1 234 567 8900</span>
+                <span><i class="bi bi-envelope-fill"></i> info@arthyproperties.com</span>
+            </div>
+            
+            <div class="user-actions">
+                {% if user.is_authenticated %}
+                    <a href="{% url 'favorite_list' %}" class="btn btn-sm" style="background: var(--light-green); color: var(--dark-green);">
+                        <i class="bi bi-heart-fill"></i>
+                    </a>
+                    <div class="dropdown">
+                        <button class="btn btn-sm dropdown-toggle" type="button" data-bs-toggle="dropdown">
+                            <i class="bi bi-person-circle"></i> {{ user.username }}
+                        </button>
+                        <ul class="dropdown-menu dropdown-menu-end">
+                            <li><a class="dropdown-item" href="{% url 'property_dashboard' %}"><i class="bi bi-speedometer2"></i> Dashboard</a></li>
+                            <li><a class="dropdown-item" href="{% url 'inquiry_list' %}"><i class="bi bi-envelope"></i> My Inquiries</a></li>
+                            <li><a class="dropdown-item" href="{% url 'favorite_list' %}"><i class="bi bi-heart"></i> Favorites</a></li>
+                            <li><hr class="dropdown-divider"></li>
+                            <li><hr class="dropdown-divider"></li>
+                        </ul>
+                    </div>
+                {% endif %}
+            </div>
+        </div>
+        
+        <!-- Messages -->
+        {% if messages %}
+            <div class="container mt-3">
+                {% for message in messages %}
+                    <div class="alert alert-{{ message.tags }} alert-dismissible fade show" role="alert">
+                        <i class="bi bi-{% if message.tags == 'success' %}check-circle{% elif message.tags == 'error' %}exclamation-circle{% else %}info-circle{% endif %}"></i>
+                        {{ message }}
+                        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+                    </div>
+                {% endfor %}
+            </div>
+        {% endif %}
+        
+        <!-- Main Content -->
+        <main>
+            {% block content %}{% endblock %}
+        </main>
+        
+        <!-- Footer -->
+        <footer>
+            <div class="footer-grid">
+                <div class="footer-section">
+                    <h6><i class="bi bi-building"></i> ArthyProperties</h6>
+                    <p class="text-white-50 small">Your trusted partner in finding the perfect property. Browse thousands of listings for sale and rent.</p>
+                </div>
+                
+                <div class="footer-section">
+                    <h6>Quick Links</h6>
+                    <a href="{% url 'property_list' %}"><i class="bi bi-chevron-right"></i> Browse</a>
+                    <a href="{% url 'property_featured' %}"><i class="bi bi-chevron-right"></i> Featured</a>
+                    <a href="{% url 'property_latest' %}"><i class="bi bi-chevron-right"></i> Latest</a>
+                    <a href="{% url 'property_search' %}"><i class="bi bi-chevron-right"></i> Search</a>
+                </div>
+                
+                <div class="footer-section">
+                    <h6>Property Types</h6>
+                    <a href="{% url 'property_by_type' 'house' %}"><i class="bi bi-chevron-right"></i> Houses</a>
+                    <a href="{% url 'property_by_type' 'apartment' %}"><i class="bi bi-chevron-right"></i> Apartments</a>
+                    <a href="{% url 'property_by_type' 'residential_land' %}"><i class="bi bi-chevron-right"></i> Land</a>
+                    <a href="{% url 'property_by_type' 'villa' %}"><i class="bi bi-chevron-right"></i> Villas</a>
+                </div>
+                
+                <div class="footer-section">
+                    <h6>Contact</h6>
+                    <p class="text-white-50 small mb-2"><i class="bi bi-telephone"></i> +1 234 567 8900</p>
+                    <p class="text-white-50 small mb-2"><i class="bi bi-envelope"></i> info@arthyproperties.com</p>
+                    <p class="text-white-50 small mb-0"><i class="bi bi-geo-alt"></i> 123 Main St, City</p>
+                </div>
+            </div>
+            
+            <div class="footer-bottom">
+                <p>&copy; {% now "Y" %} ArthyProperties. All rights reserved.</p>
+            </div>
+        </footer>
+    </div>
+    
+    <script src="{% static 'properties/js/bootstrap.bundle.min.js' %}"></script>
+    <script>
+        function toggleSidebar() {
+            document.getElementById('sidebar').classList.toggle('show');
+        }
+    </script>
+    {% block extra_js %}{% endblock %}
+</body>
+</html>

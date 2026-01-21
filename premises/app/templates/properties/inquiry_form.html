@@ -1,0 +1,131 @@
+{% extends 'properties/base.html' %}
+{% load static %}
+
+{% block title %}Contact About {{ property.title }}{% endblock %}
+
+{% block content %}
+<section class="bg-light py-5">
+    <div class="container">
+        <h1 class="display-5 fw-bold mb-3">
+            <i class="bi bi-envelope"></i> Contact Property Owner
+        </h1>
+        <p class="lead text-muted">Send an inquiry about this property</p>
+    </div>
+</section>
+
+<section class="py-5">
+    <div class="container">
+        <div class="row">
+            <!-- Property Summary -->
+            <div class="col-lg-4 mb-4">
+                <div class="card">
+                    {% if property.images.all %}
+                        {% with property.images.all.0 as first_image %}
+                            <img src="{{ first_image.image.url }}" class="card-img-top" alt="{{ property.title }}">
+                        {% endwith %}
+                    {% else %}
+                        <img src="https://via.placeholder.com/400x250?text=No+Image" class="card-img-top" alt="No image">
+                    {% endif %}
+                    
+                    <div class="card-body">
+                        <h5 class="card-title">{{ property.title }}</h5>
+                        <p class="property-price mb-2">
+                            {{ property.currency }} {{ property.price|floatformat:0 }}
+                        </p>
+                        <p class="text-muted small mb-3">
+                            <i class="bi bi-geo-alt"></i> {{ property.city }}, {{ property.state }}
+                        </p>
+                        
+                        <div class="d-flex gap-3 text-muted small">
+                            {% if not property.is_land %}
+                                {% if property.bedrooms %}
+                                    <span><i class="bi bi-door-closed"></i> {{ property.bedrooms }} Beds</span>
+                                {% endif %}
+                                {% if property.bathrooms %}
+                                    <span><i class="bi bi-droplet"></i> {{ property.bathrooms }} Baths</span>
+                                {% endif %}
+                            {% else %}
+                                {% if property.land_size_acres %}
+                                    <span><i class="bi bi-geo"></i> {{ property.land_size_acres }} acres</span>
+                                {% endif %}
+                            {% endif %}
+                        </div>
+
+                        <hr>
+
+                        <a href="{% url 'property_detail' property.pk %}" class="btn btn-outline-primary w-100">
+                            <i class="bi bi-arrow-left"></i> Back to Property
+                        </a>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Inquiry Form -->
+            <div class="col-lg-8">
+                <div class="search-box">
+                    <h5 class="mb-4">Send Your Inquiry</h5>
+                    
+                    <form method="post">
+                        {% csrf_token %}
+                        
+                        <div class="mb-4">
+                            <label for="{{ form.inquirer_name.id_for_label }}" class="form-label fw-bold">
+                                {{ form.inquirer_name.label }} <span class="text-danger">*</span>
+                            </label>
+                            {{ form.inquirer_name }}
+                            {% if form.inquirer_name.errors %}
+                                <div class="text-danger small mt-1">{{ form.inquirer_name.errors }}</div>
+                            {% endif %}
+                        </div>
+
+                        <div class="mb-4">
+                            <label for="{{ form.inquirer_email.id_for_label }}" class="form-label fw-bold">
+                                {{ form.inquirer_email.label }} <span class="text-danger">*</span>
+                            </label>
+                            {{ form.inquirer_email }}
+                            {% if form.inquirer_email.errors %}
+                                <div class="text-danger small mt-1">{{ form.inquirer_email.errors }}</div>
+                            {% endif %}
+                        </div>
+
+                        <div class="mb-4">
+                            <label for="{{ form.inquirer_phone.id_for_label }}" class="form-label fw-bold">
+                                {{ form.inquirer_phone.label }}
+                            </label>
+                            {{ form.inquirer_phone }}
+                            {% if form.inquirer_phone.errors %}
+                                <div class="text-danger small mt-1">{{ form.inquirer_phone.errors }}</div>
+                            {% endif %}
+                            <small class="text-muted">Optional - we'll call you back if needed</small>
+                        </div>
+
+                        <div class="mb-4">
+                            <label for="{{ form.message.id_for_label }}" class="form-label fw-bold">
+                                {{ form.message.label }} <span class="text-danger">*</span>
+                            </label>
+                            {{ form.message }}
+                            {% if form.message.errors %}
+                                <div class="text-danger small mt-1">{{ form.message.errors }}</div>
+                            {% endif %}
+                        </div>
+
+                        <div class="alert alert-info">
+                            <i class="bi bi-info-circle"></i>
+                            <strong>Privacy Notice:</strong> Your contact information will only be shared with the property owner/agent and will not be used for marketing purposes.
+                        </div>
+
+                        <div class="d-grid gap-2">
+                            <button type="submit" class="btn btn-primary btn-lg">
+                                <i class="bi bi-send"></i> Send Inquiry
+                            </button>
+                            <a href="{% url 'property_detail' property.pk %}" class="btn btn-outline-secondary">
+                                Cancel
+                            </a>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+{% endblock %}
