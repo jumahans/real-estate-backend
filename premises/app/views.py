@@ -366,7 +366,7 @@ def property_favorite_toggle(request, property_pk):
 def favorite_list(request):
     """View user's favorite properties"""
     favorites = Favorite.objects.filter(
-        user=request.user
+        # user=request.user
     ).select_related('property').prefetch_related('property__images')
     
     # Pagination
