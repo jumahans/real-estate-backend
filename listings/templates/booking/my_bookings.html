@@ -1,0 +1,196 @@
+{% extends 'properties/base.html' %}
+{% load static %}
+
+{% block title %}My Bookings | ArthiProperties{% endblock %}
+
+{% block content %}
+<div class="container py-5" style="min-height: 80vh;">
+    <div class="d-flex justify-content-between align-items-center mb-5">
+        <div>
+            <h1 class="display-5 fw-bold mb-1" style="font-family: var(--font-heading); color: var(--brand-primary);">My Bookings</h1>
+            <p class="text-muted font-sans">Manage your upcoming property viewings and history.</p>
+        </div>
+        <a href="{% url 'property_list' %}" class="btn btn-outline-primary rounded-pill fw-bold shadow-sm">
+            <i class="bi bi-search me-1"></i> Browse Properties
+        </a>
+    </div>
+
+    <ul class="nav nav-pills mb-4 gap-2" id="bookingTabs" role="tablist">
+        <li class="nav-item">
+            <button class="nav-link active rounded-pill fw-bold px-4" data-bs-toggle="tab" data-bs-target="#upcoming" type="button">
+                Upcoming
+            </button>
+        </li>
+        <li class="nav-item">
+            <button class="nav-link rounded-pill fw-bold px-4" data-bs-toggle="tab" data-bs-target="#past" type="button">
+                History
+            </button>
+        </li>
+    </ul>
+
+    <div class="tab-content">
+        <div class="tab-pane fade show active" id="upcoming">
+            {% if upcoming_bookings %}
+                <div class="row g-4">
+                    {% for booking in upcoming_bookings %}
+                        <div class="col-md-6 col-lg-4">
+                            <div class="card h-100 border-0 shadow-sm rounded-4 overflow-hidden booking-card">
+                                <div class="position-relative" style="height: 180px;">
+                                    {% if booking.listing.images.first %}
+                                        <img src="{{ booking.listing.images.first.image.url }}" class="w-100 h-100 object-fit-cover" alt="{{ booking.listing.title }}">
+                                    {% else %}
+                                        <div class="w-100 h-100 bg-secondary d-flex align-items-center justify-content-center text-white">
+                                            <i class="bi bi-building fs-1"></i>
+                                        </div>
+                                    {% endif %}
+                                    
+                                    <span class="badge position-absolute top-0 end-0 m-3 shadow px-3 py-2 rounded-pill
+                                        {% if booking.status == 'confirmed' %}bg-success
+                                        {% elif booking.status == 'pending' %}bg-warning text-dark
+                                        {% else %}bg-secondary{% endif %}">
+                                        {{ booking.get_status_display }}
+                                    </span>
+                                </div>
+
+                                <div class="card-body p-4">
+                                    <h5 class="card-title fw-bold text-truncate mb-3" style="font-family: var(--font-heading);">
+                                        <a href="{% url 'property_detail' booking.listing.pk %}" class="text-decoration-none text-dark hover-primary">
+                                            {{ booking.listing.title }}
+                                        </a>
+                                    </h5>
+                                    
+                                    <div class="d-flex align-items-start gap-3 mb-3">
+                                        <div class="icon-box bg-light rounded-circle d-flex align-items-center justify-content-center text-primary" style="width: 42px; height: 42px; min-width: 42px;">
+                                            <i class="bi bi-calendar-event fs-5"></i>
+                                        </div>
+                                        <div>
+                                            <small class="text-muted d-block text-uppercase fw-bold" style="font-size: 0.7rem;">Date & Time</small>
+                                            <span class="fw-bold text-primary fs-5">{{ booking.start_datetime|date:"D, M d" }}</span><br>
+                                            <span class="text-muted small">{{ booking.start_datetime|date:"h:i A" }} - {{ booking.end_datetime|date:"h:i A" }}</span>
+                                        </div>
+                                    </div>
+
+                                    <div class="d-flex align-items-start gap-3">
+                                        <div class="icon-box bg-light rounded-circle d-flex align-items-center justify-content-center text-primary" style="width: 42px; height: 42px; min-width: 42px;">
+                                            <i class="bi bi-geo-alt fs-5"></i>
+                                        </div>
+                                        <div>
+                                            <small class="text-muted d-block text-uppercase fw-bold" style="font-size: 0.7rem;">Location</small>
+                                            <span class="small text-muted">{{ booking.listing.address|truncatechars:35 }}</span>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <div class="card-footer bg-white border-top p-3">
+                                    <form action="{% url 'cancel_booking' booking.pk %}" method="post" onsubmit="return confirm('Are you sure you want to cancel this booking?');">
+                                        {% csrf_token %}
+                                        <button type="submit" class="btn btn-outline-danger w-100 rounded-pill btn-sm fw-bold py-2">
+                                            <i class="bi bi-x-circle me-1"></i> Cancel Booking
+                                        </button>
+                                    </form>
+                                </div>
+                            </div>
+                        </div>
+                    {% endfor %}
+                </div>
+            {% else %}
+                <div class="text-center py-5 rounded-4 bg-white shadow-sm border border-dashed">
+                    <i class="bi bi-calendar-x display-1 text-muted opacity-25"></i>
+                    <h4 class="mt-3 fw-bold text-muted">No upcoming bookings</h4>
+                    <p class="text-muted mb-4">You haven't scheduled any property viewings yet.</p>
+                    <a href="{% url 'property_list' %}" class="btn btn-primary rounded-pill px-5 py-2 fw-bold shadow-sm">Explore Properties</a>
+                </div>
+            {% endif %}
+        </div>
+
+        <div class="tab-pane fade" id="past">
+            <div class="card border-0 shadow-sm rounded-4 overflow-hidden">
+                <div class="table-responsive">
+                    <table class="table table-hover align-middle mb-0">
+                        <thead class="bg-light">
+                            <tr>
+                                <th class="py-3 ps-4 text-uppercase text-muted small fw-bold border-0" style="min-width: 250px;">Property</th>
+                                <th class="py-3 text-uppercase text-muted small fw-bold border-0">Date</th>
+                                <th class="py-3 text-uppercase text-muted small fw-bold border-0">Status</th>
+                                <th class="py-3 text-end pe-4 text-uppercase text-muted small fw-bold border-0">Action</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for booking in past_bookings %}
+                                <tr>
+                                    <td class="ps-4">
+                                        <div class="d-flex align-items-center gap-3">
+                                            {% if booking.listing.images.first %}
+                                                <img src="{{ booking.listing.images.first.image.url }}" class="rounded-3 object-fit-cover" width="60" height="60" alt="">
+                                            {% else %}
+                                                <div class="rounded-3 bg-secondary d-flex align-items-center justify-content-center text-white" style="width: 60px; height: 60px;"><i class="bi bi-building"></i></div>
+                                            {% endif %}
+                                            <div>
+                                                <span class="fw-bold d-block text-dark font-heading">{{ booking.listing.title }}</span>
+                                                <span class="small text-muted">{{ booking.listing.city }}</span>
+                                            </div>
+                                        </div>
+                                    </td>
+                                    <td>
+                                        <span class="d-block fw-bold text-dark">{{ booking.start_datetime|date:"M d, Y" }}</span>
+                                        <small class="text-muted">{{ booking.start_datetime|date:"h:i A" }}</small>
+                                    </td>
+                                    <td>
+                                        {% if booking.status == 'cancelled' %}
+                                            <span class="badge bg-danger bg-opacity-10 text-danger px-3 py-2 rounded-pill">Cancelled</span>
+                                        {% else %}
+                                            <span class="badge bg-secondary bg-opacity-10 text-secondary px-3 py-2 rounded-pill">Completed</span>
+                                        {% endif %}
+                                    </td>
+                                    <td class="text-end pe-4">
+                                        <a href="{% url 'property_detail' booking.listing.pk %}" class="btn btn-sm btn-light rounded-pill px-3">View Again</a>
+                                    </td>
+                                </tr>
+                            {% empty %}
+                                <tr>
+                                    <td colspan="4" class="text-center py-5 text-muted">No booking history available.</td>
+                                </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<style>
+    /* Custom Styling Updates */
+    .nav-pills .nav-link {
+        color: var(--brand-primary);
+        background-color: transparent;
+        transition: all 0.3s;
+        border: 1px solid transparent;
+    }
+    .nav-pills .nav-link:hover {
+        background-color: rgba(27, 77, 62, 0.05);
+        border-color: rgba(27, 77, 62, 0.1);
+    }
+    .nav-pills .nav-link.active {
+        background-color: var(--brand-primary);
+        color: white;
+        box-shadow: 0 4px 12px rgba(27, 77, 62, 0.25);
+    }
+    
+    .text-primary { color: var(--brand-primary) !important; }
+    .bg-light { background-color: #f8f9fa !important; }
+    .object-fit-cover { object-fit: cover; }
+    .font-heading { font-family: var(--font-heading); }
+    
+    .hover-primary:hover {
+        color: var(--brand-secondary) !important;
+        transition: color 0.2s;
+    }
+    
+    /* Subtle hover effect for cards */
+    .booking-card { transition: transform 0.3s; }
+    .booking-card:hover { transform: translateY(-5px); }
+    
+    .border-dashed { border-style: dashed !important; border-width: 2px !important; }
+</style>
+{% endblock %}

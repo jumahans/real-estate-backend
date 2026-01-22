@@ -1,0 +1,173 @@
+{% extends 'properties/base.html' %}
+{% load static %}
+
+{% block title %}Create Account | ArthiProperties{% endblock %}
+
+{% block extra_css %}
+<style>
+    /* Override base padding for full-screen layout */
+    body { padding-top: 0 !important; }
+    
+    /* Split Layout Styles */
+    .register-split-screen {
+        min-height: 100vh;
+        display: flex;
+    }
+    
+    .register-visual {
+        background-image: url('https://images.unsplash.com/photo-1600607687939-ce8a6c25118c?ixlib=rb-4.0.3&auto=format&fit=crop&w=1920&q=80');
+        background-size: cover;
+        background-position: center;
+        position: relative;
+        /* Fixed position background for parallax feel */
+        background-attachment: fixed;
+    }
+    
+    .register-visual::before {
+        content: '';
+        position: absolute;
+        inset: 0;
+        background: linear-gradient(to bottom, rgba(27, 77, 62, 0.5), rgba(27, 77, 62, 0.9));
+    }
+
+    /* Form Styles - Targeting Django rendered inputs */
+    .register-form input, .register-form select, .register-form textarea {
+        display: block;
+        width: 100%;
+        padding: 0.8rem 1.2rem;
+        font-size: 0.95rem;
+        font-weight: 400;
+        line-height: 1.5;
+        color: #212529;
+        background-color: #f8f9fa;
+        background-clip: padding-box;
+        border: 1px solid #e0e0e0;
+        border-radius: 0.5rem;
+        transition: border-color .15s ease-in-out,box-shadow .15s ease-in-out;
+    }
+
+    .register-form input:focus, .register-form select:focus {
+        background-color: #fff;
+        border-color: var(--brand-primary);
+        outline: 0;
+        box-shadow: 0 0 0 4px rgba(27, 77, 62, 0.1);
+    }
+    
+    .brand-heading {
+        font-family: var(--font-heading);
+        color: var(--brand-primary);
+    }
+
+    .form-text {
+        font-size: 0.8rem;
+        margin-top: 0.25rem;
+        color: #6c757d;
+    }
+    
+    /* Hide the list bullet points for help text */
+    .helptext, ul.errorlist {
+        padding-left: 0;
+        list-style: none;
+        margin-bottom: 0;
+        font-size: 0.85rem;
+        color: #6c757d;
+    }
+    ul.errorlist {
+        color: #dc3545;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="container-fluid p-0">
+    <div class="row g-0 register-split-screen">
+        
+        <div class="col-lg-6 d-none d-lg-block register-visual position-relative">
+            <div class="position-absolute bottom-0 start-0 p-5 text-white" style="z-index: 2;">
+                <h2 class="display-4 fw-bold mb-3" style="font-family: var(--font-heading);">Join the Circle</h2>
+                <p class="lead opacity-75 font-sans" style="max-width: 450px;">
+                    Create your account to unlock exclusive property insights, schedule viewings instantly, and manage your real estate journey.
+                </p>
+                <div class="d-flex gap-3 mt-4 pt-4 border-top border-white border-opacity-25">
+                    <div>
+                        <i class="bi bi-check-circle-fill text-warning fs-5"></i>
+                        <span class="ms-2 small fw-bold text-uppercase">Saved Searches</span>
+                    </div>
+                    <div>
+                        <i class="bi bi-check-circle-fill text-warning fs-5"></i>
+                        <span class="ms-2 small fw-bold text-uppercase">Instant Alerts</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-lg-6 d-flex align-items-center justify-content-center bg-white overflow-auto" style="max-height: 100vh;">
+            <div class="p-4 p-md-5 w-100" style="max-width: 600px;">
+                
+                <div class="text-center mb-4 d-lg-none">
+                    <span class="d-inline-flex align-items-center justify-content-center bg-light text-primary rounded-circle shadow-sm mb-2" style="width: 50px; height: 50px; color: var(--brand-primary) !important;">
+                        <i class="bi bi-tree-fill fs-4"></i>
+                    </span>
+                    <h4 class="brand-heading fw-bold">ArthiProperties</h4>
+                </div>
+
+                <div class="mb-4">
+                    <h2 class="brand-heading fw-bold mb-2">Create Account</h2>
+                    <p class="text-muted">Begin your journey to finding the perfect property.</p>
+                </div>
+
+                <form method="post" class="register-form">
+                    {% csrf_token %}
+                    
+                    {% if form.non_field_errors %}
+                        <div class="alert alert-danger border-0 rounded-3 shadow-sm mb-4">
+                            {% for error in form.non_field_errors %}
+                                <div class="d-flex align-items-center gap-2">
+                                    <i class="bi bi-exclamation-circle-fill"></i> {{ error }}
+                                </div>
+                            {% endfor %}
+                        </div>
+                    {% endif %}
+
+                    {% for field in form %}
+                        <div class="mb-3">
+                            <label class="form-label fw-bold small text-uppercase text-muted">
+                                {{ field.label }} {% if field.field.required %}<span class="text-danger">*</span>{% endif %}
+                            </label>
+                            
+                            {{ field }}
+                            
+                            {% if field.errors %}
+                                <div class="mt-1 text-danger small">
+                                    {% for error in field.errors %}
+                                        <span><i class="bi bi-exclamation-circle"></i> {{ error }}</span>
+                                    {% endfor %}
+                                </div>
+                            {% endif %}
+                            
+                            {% if field.help_text %}
+                                <div class="form-text opacity-75 small">
+                                    {{ field.help_text|safe }}
+                                </div>
+                            {% endif %}
+                        </div>
+                    {% endfor %}
+
+                    <div class="d-grid mt-4">
+                        <button type="submit" class="btn btn-primary rounded-pill py-3 fw-bold shadow-sm">
+                            Join ArthiProperties
+                        </button>
+                    </div>
+                </form>
+
+                <div class="text-center mt-4 pt-4 border-top">
+                    <p class="text-muted small">Already part of our community?</p>
+                    <a href="{% url 'login' %}" class="btn btn-outline-secondary rounded-pill px-4 fw-bold">
+                        Sign In Here
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

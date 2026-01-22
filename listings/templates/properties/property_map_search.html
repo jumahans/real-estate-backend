@@ -1,379 +1,67 @@
 {% extends 'properties/base.html' %}
-{% load static %}
+{% load static humanize %}
 
-{% block title %}Map Search - Properties{% endblock %}
+{% block title %}Map Search | ArthiProperties{% endblock %}
 
 {% block extra_css %}
 <style>
-    .map-hero {
-        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-    }
+    /* Full height layout without footer interference */
+    body { overflow-y: hidden; } 
+    .map-container { height: calc(100vh - 80px); }
+    .property-scroll { height: calc(100vh - 80px); overflow-y: auto; }
     
-    .map-list-item {
-        transition: all 0.3s ease;
-        border-left: 3px solid transparent;
-    }
-    
-    .map-list-item:hover {
-        border-left-color: #667eea;
-        background-color: #f8f9fa;
-        transform: translateX(5px);
-    }
-    
-    .map-list-item.active {
-        border-left-color: #764ba2;
-        background-color: #e7f3ff;
-    }
-    
-    .property-price {
-        color: #667eea;
-        font-weight: 600;
-        font-size: 1.1rem;
-    }
-    
-    .sticky-top {
-        position: sticky;
-        z-index: 100;
-    }
+    /* Custom Scrollbar */
+    .property-scroll::-webkit-scrollbar { width: 6px; }
+    .property-scroll::-webkit-scrollbar-thumb { background-color: #ddd; border-radius: 4px; }
 </style>
 {% endblock %}
 
 {% block content %}
-<!-- Map Hero -->
-<section class="map-hero py-5 text-white">
-    <div class="container">
-        <div class="row align-items-center">
-            <div class="col-lg-8">
-                <h1 class="display-4 fw-bold mb-3">
-                    <i class="bi bi-map"></i> Map Search
-                </h1>
-                <p class="lead mb-0">Browse properties on the interactive map</p>
-            </div>
-            <div class="col-lg-4">
-                <div class="map-controls">
-                    <form method="get" class="row g-2">
-                        <div class="col">
-                            <input type="text" class="form-control form-control-lg" name="location" 
-                                   placeholder="Enter location..." value="{{ request.GET.location|default:'' }}">
-                        </div>
-                        <div class="col-auto">
-                            <button type="submit" class="btn btn-light btn-lg">
-                                <i class="bi bi-search"></i>
-                            </button>
-                        </div>
-                    </form>
-                </div>
-            </div>
-        </div>
-    </div>
-</section>
-
-<!-- Interactive Map + List -->
-<section class="map-section py-5">
-    <div class="container-fluid px-4">
-        <div class="row">
-            <!-- Map (70% width) -->
-            <div class="col-lg-8 mb-4 mb-lg-0">
-                <div id="mainPropertyMap" style="height: 700px; border-radius: 12px; box-shadow: 0 4px 12px rgba(0,0,0,0.15);"></div>
+<div class="container-fluid p-0">
+    <div class="row g-0">
+        <div class="col-lg-4 col-xl-3 bg-light property-scroll border-end">
+            <div class="p-3 border-bottom bg-white sticky-top">
+                <h5 class="fw-bold mb-0 font-heading">
+                    {{ properties.count }} Properties
+                </h5>
+                <small class="text-muted">Showing properties on map</small>
             </div>
             
-            <!-- Property List Sidebar (30%) -->
-            <div class="col-lg-4">
-                <div class="map-list-sidebar sticky-top" style="top: 100px;">
-                    <div class="card shadow-sm mb-4">
-                        <div class="card-header bg-white d-flex justify-content-between align-items-center">
-                            <h6 class="mb-0"><i class="bi bi-list-ul text-primary"></i> Properties ({{ properties.count }})</h6>
-                            <button class="btn btn-sm btn-outline-secondary" onclick="clearMapFilters()">
-                                <i class="bi bi-x"></i> Clear
-                            </button>
+            <div class="p-3">
+                {% for property in properties %}
+                <div class="card border-0 shadow-sm mb-3 rounded-3 overflow-hidden">
+                    <div class="row g-0">
+                        <div class="col-4">
+                            {% if property.images.first %}
+                                <img src="{{ property.images.first.image.url }}" class="h-100 w-100 object-fit-cover" alt="...">
+                            {% else %}
+                                <div class="bg-secondary h-100 w-100 d-flex align-items-center justify-content-center text-white"><i class="bi bi-image"></i></div>
+                            {% endif %}
                         </div>
-                        <div class="list-group list-group-flush map-list" id="propertyList" style="max-height: 600px; overflow-y: auto;">
-                            {% for property in properties %}
-                                <a href="{% url 'property_detail' property.pk %}" 
-                                   class="list-group-item list-group-item-action map-list-item" 
-                                   data-lat="{{ property.latitude }}" 
-                                   data-lng="{{ property.longitude }}" 
-                                   data-pk="{{ property.pk }}"
-                                   onmouseenter="highlightMarker({{ property.pk }})"
-                                   onmouseleave="unhighlightMarker({{ property.pk }})">
-                                    <div class="d-flex w-100 justify-content-between">
-                                        <div class="flex-grow-1">
-                                            <h6 class="mb-1">{{ property.title|truncatewords:8 }}</h6>
-                                            <div class="property-price">{{ property.currency }} {{ property.price|floatformat:0 }}</div>
-                                            <small class="text-muted d-block">
-                                                <i class="bi bi-geo-alt"></i> {{ property.city }}, {{ property.country }}
-                                            </small>
-                                            <div class="mt-2">
-                                                {% if property.bedrooms %}
-                                                    <span class="badge bg-light text-dark me-1">
-                                                        <i class="bi bi-door-closed"></i> {{ property.bedrooms }} Beds
-                                                    </span>
-                                                {% endif %}
-                                                {% if property.land_size_acres %}
-                                                    <span class="badge bg-light text-dark">
-                                                        <i class="bi bi-grid-3x3"></i> {{ property.land_size_acres }} acres
-                                                    </span>
-                                                {% endif %}
-                                            </div>
-                                        </div>
-                                        <div class="text-end ms-2">
-                                            {% if property.images.exists %}
-                                                <img src="{{ property.images.first.image.url }}" 
-                                                     alt="{{ property.title }}" 
-                                                     style="width: 80px; height: 80px; object-fit: cover; border-radius: 8px;">
-                                            {% else %}
-                                                <div style="width: 80px; height: 80px; background: #e9ecef; border-radius: 8px; display: flex; align-items: center; justify-content: center;">
-                                                    <i class="bi bi-image text-muted"></i>
-                                                </div>
-                                            {% endif %}
-                                        </div>
-                                    </div>
-                                </a>
-                            {% empty %}
-                                <div class="text-center py-5 text-muted">
-                                    <i class="bi bi-geo-alt display-3"></i>
-                                    <p class="mt-3">No properties found</p>
-                                    <a href="{% url 'property_list' %}" class="btn btn-primary btn-sm">Browse All</a>
-                                </div>
-                            {% endfor %}
-                        </div>
-                    </div>
-                    
-                    <!-- Quick Filters -->
-                    <div class="card shadow-sm">
-                        <div class="card-header bg-light">
-                            <h6 class="mb-0"><i class="bi bi-funnel"></i> Map Filters</h6>
-                        </div>
-                        <div class="card-body p-3">
-                            <div class="mb-3">
-                                <label class="form-label small fw-bold">Property Type</label>
-                                <select class="form-select form-select-sm" onchange="filterMapByType(this.value)" id="mapTypeFilter">
-                                    <option value="">All Types</option>
-                                    <option value="apartment">Apartment</option>
-                                    <option value="house">House</option>
-                                    <option value="villa">Villa</option>
-                                    <option value="residential_land">Residential Land</option>
-                                    <option value="commercial_land">Commercial Land</option>
-                                    <option value="agricultural_land">Agricultural Land</option>
-                                </select>
-                            </div>
-                            
-                            <div class="mb-3">
-                                <label class="form-label small fw-bold">Price Range</label>
-                                <div class="row g-2">
-                                    <div class="col-6">
-                                        <input type="number" class="form-control form-control-sm" id="minPrice" placeholder="Min" onchange="filterMapByPrice()">
-                                    </div>
-                                    <div class="col-6">
-                                        <input type="number" class="form-control form-control-sm" id="maxPrice" placeholder="Max" onchange="filterMapByPrice()">
-                                    </div>
-                                </div>
-                            </div>
-                            
-                            <div class="mb-3">
-                                <div class="form-check">
-                                    <input class="form-check-input" type="checkbox" id="mapWaterfront" onchange="toggleWaterfrontFilter()">
-                                    <label class="form-check-label small" for="mapWaterfront">
-                                        <i class="bi bi-water"></i> Waterfront Only
-                                    </label>
-                                </div>
-                                <div class="form-check">
-                                    <input class="form-check-input" type="checkbox" id="mapLandOnly" onchange="toggleLandFilter()">
-                                    <label class="form-check-label small" for="mapLandOnly">
-                                        <i class="bi bi-tree"></i> Land Only
-                                    </label>
-                                </div>
-                            </div>
-                            
-                            <div class="d-grid gap-2">
-                                <button class="btn btn-primary btn-sm" onclick="fitMapBounds()">
-                                    <i class="bi bi-arrows-angle-expand"></i> Fit All
-                                </button>
-                                <button class="btn btn-outline-secondary btn-sm" onclick="clearAllMapFilters()">
-                                    <i class="bi bi-arrow-counterclockwise"></i> Reset
-                                </button>
+                        <div class="col-8">
+                            <div class="card-body p-2">
+                                <h6 class="card-title fw-bold text-truncate mb-1">{{ property.title }}</h6>
+                                <p class="card-text text-primary fw-bold mb-1 small">{{ property.currency }} {{ property.price|intword }}</p>
+                                <p class="card-text small text-muted text-truncate mb-0"><i class="bi bi-geo-alt"></i> {{ property.city }}</p>
+                                <a href="{% url 'property_detail' property.pk %}" class="stretched-link"></a>
                             </div>
                         </div>
                     </div>
                 </div>
+                {% endfor %}
+            </div>
+        </div>
+
+        <div class="col-lg-8 col-xl-9 map-container position-relative bg-secondary bg-opacity-10">
+            <div class="position-absolute top-50 start-50 translate-middle text-center">
+                <div class="bg-white p-4 rounded-4 shadow-lg">
+                    <i class="bi bi-map display-4 text-primary mb-3"></i>
+                    <h3 class="fw-bold">Interactive Map</h3>
+                    <p class="text-muted mb-3">Integrate Google Maps or Leaflet.js here.</p>
+                    <button class="btn btn-outline-primary rounded-pill btn-sm">Load Map API</button>
+                </div>
             </div>
         </div>
     </div>
-</section>
-
-<script src="https://maps.googleapis.com/maps/api/js?key=YOUR_GOOGLE_MAPS_API_KEY&callback=initMapSearch&libraries=geometry,places" async defer></script>
-
-<script>
-let mapMarkers = [];
-let currentMap;
-let infoWindows = [];
-
-function initMapSearch() {
-    const centerLat = {{ center_lat|default:"0" }};
-    const centerLng = {{ center_lng|default:"0" }};
-    
-    currentMap = new google.maps.Map(document.getElementById('mainPropertyMap'), {
-        center: { lat: centerLat, lng: centerLng },
-        zoom: 12,
-        mapTypeControl: true,
-        streetViewControl: true,
-        fullscreenControl: true
-    });
-    
-    loadPropertyMarkers();
-    fitMapBounds();
-}
-
-function loadPropertyMarkers() {
-    const allProperties = [
-        {% for property in properties %}
-        {
-            id: {{ property.pk }},
-            lat: parseFloat("{{ property.latitude }}"),
-            lng: parseFloat("{{ property.longitude }}"),
-            title: "{{ property.title|escapejs }}",
-            price: "{{ property.currency }} {{ property.price|floatformat:0 }}",
-            type: "{{ property.property_type }}",
-            bedrooms: {% if property.bedrooms %}{{ property.bedrooms }}{% else %}null{% endif %},
-            land_acres: {% if property.land_size_acres %}"{{ property.land_size_acres }}"{% else %}null{% endif %},
-            waterfront: {{ property.is_waterfront|yesno:"true,false" }},
-            image: "{% if property.images.exists %}{{ property.images.first.image.url }}{% endif %}",
-            url: "{% url 'property_detail' property.pk %}",
-            city: "{{ property.city|escapejs }}",
-            priceValue: parseFloat("{{ property.price }}")
-        }{% if not forloop.last %},{% endif %}
-        {% endfor %}
-    ];
-    
-    allProperties.forEach(property => {
-        addMarker(property);
-    });
-}
-
-function addMarker(property) {
-    const marker = new google.maps.Marker({
-        position: { lat: property.lat, lng: property.lng },
-        map: currentMap,
-        title: property.title,
-        animation: google.maps.Animation.DROP
-    });
-    
-    const infoContent = `
-        <div style="max-width: 250px;">
-            ${property.image ? `<img src="${property.image}" style="width: 100%; height: 150px; object-fit: cover; border-radius: 8px; margin-bottom: 10px;">` : ''}
-            <h6 style="margin: 0 0 8px 0;">${property.title}</h6>
-            <div style="color: #667eea; font-weight: 600; margin-bottom: 8px;">${property.price}</div>
-            <div style="color: #6c757d; font-size: 0.9rem; margin-bottom: 8px;">${property.city}</div>
-            ${property.bedrooms ? `<span style="background: #e9ecef; padding: 4px 8px; border-radius: 4px; font-size: 0.85rem;">${property.bedrooms} Beds</span>` : ''}
-            ${property.land_acres ? `<span style="background: #e9ecef; padding: 4px 8px; border-radius: 4px; font-size: 0.85rem;">${property.land_acres} acres</span>` : ''}
-            <div style="margin-top: 12px;">
-                <a href="${property.url}" style="background: #667eea; color: white; padding: 6px 12px; border-radius: 4px; text-decoration: none; display: inline-block;">View Details</a>
-            </div>
-        </div>
-    `;
-    
-    const infoWindow = new google.maps.InfoWindow({
-        content: infoContent
-    });
-    
-    marker.addListener('click', () => {
-        infoWindows.forEach(iw => iw.close());
-        infoWindow.open(currentMap, marker);
-        
-        document.querySelectorAll('.map-list-item').forEach(item => {
-            item.classList.remove('active');
-        });
-        const listItem = document.querySelector(`.map-list-item[data-pk="${property.id}"]`);
-        if (listItem) {
-            listItem.classList.add('active');
-            listItem.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
-        }
-    });
-    
-    marker.propertyData = property;
-    mapMarkers.push(marker);
-    infoWindows.push(infoWindow);
-}
-
-function highlightMarker(propertyId) {
-    const marker = mapMarkers.find(m => m.propertyData.id === propertyId);
-    if (marker) {
-        marker.setAnimation(google.maps.Animation.BOUNCE);
-        setTimeout(() => marker.setAnimation(null), 750);
-    }
-}
-
-function unhighlightMarker(propertyId) {
-    const marker = mapMarkers.find(m => m.propertyData.id === propertyId);
-    if (marker) marker.setAnimation(null);
-}
-
-function filterMapByType(type) {
-    mapMarkers.forEach(marker => {
-        marker.setVisible(!type || marker.propertyData.type === type);
-    });
-    updatePropertyList();
-}
-
-function toggleWaterfrontFilter() {
-    const isChecked = document.getElementById('mapWaterfront').checked;
-    mapMarkers.forEach(marker => {
-        marker.setVisible(isChecked ? marker.propertyData.waterfront : true);
-    });
-    updatePropertyList();
-}
-
-function toggleLandFilter() {
-    const isChecked = document.getElementById('mapLandOnly').checked;
-    mapMarkers.forEach(marker => {
-        marker.setVisible(isChecked ? marker.propertyData.type.includes('land') : true);
-    });
-    updatePropertyList();
-}
-
-function filterMapByPrice() {
-    const minPrice = parseFloat(document.getElementById('minPrice').value) || 0;
-    const maxPrice = parseFloat(document.getElementById('maxPrice').value) || Infinity;
-    
-    mapMarkers.forEach(marker => {
-        const price = marker.propertyData.priceValue;
-        marker.setVisible(price >= minPrice && price <= maxPrice);
-    });
-    updatePropertyList();
-}
-
-function updatePropertyList() {
-    const visibleIds = mapMarkers.filter(m => m.getVisible()).map(m => m.propertyData.id);
-    
-    document.querySelectorAll('.map-list-item').forEach(item => {
-        const itemId = parseInt(item.dataset.pk);
-        item.style.display = visibleIds.includes(itemId) ? 'block' : 'none';
-    });
-}
-
-function fitMapBounds() {
-    const bounds = new google.maps.LatLngBounds();
-    mapMarkers.forEach(marker => {
-        if (marker.getVisible()) bounds.extend(marker.getPosition());
-    });
-    
-    if (!bounds.isEmpty()) currentMap.fitBounds(bounds);
-}
-
-function clearMapFilters() {
-    document.getElementById('mapTypeFilter').value = '';
-    document.getElementById('mapWaterfront').checked = false;
-    document.getElementById('mapLandOnly').checked = false;
-    
-    mapMarkers.forEach(marker => marker.setVisible(true));
-    updatePropertyList();
-}
-
-function clearAllMapFilters() {
-    clearMapFilters();
-    document.getElementById('minPrice').value = '';
-    document.getElementById('maxPrice').value = '';
-    fitMapBounds();
-}
-</script>
+</div>
 {% endblock %}

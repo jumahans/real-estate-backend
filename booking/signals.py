@@ -2,7 +2,7 @@ from django.db.models.signals import post_save
 from django.dispatch import receiver
 from django.core.mail import send_mail
 from django.conf import settings
-from .models import Booking, Agent
+from .models import Booking
 
 @receiver(post_save, sender=Booking)
 def handle_booking_events(sender, instance, created, **kwargs):

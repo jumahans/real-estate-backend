@@ -1,131 +1,144 @@
 {% extends 'properties/base.html' %}
 {% load static %}
+{% load humanize %}
 
-{% block title %}Contact About {{ property.title }}{% endblock %}
+{% block title %}Contact Agent | {{ property.title }}{% endblock %}
 
 {% block content %}
-<section class="bg-light py-5">
+<section class="py-5 text-center text-white" style="background: linear-gradient(135deg, var(--brand-primary), #0f2b23); margin-top: -80px; padding-top: 120px !important;">
     <div class="container">
-        <h1 class="display-5 fw-bold mb-3">
-            <i class="bi bi-envelope"></i> Contact Property Owner
-        </h1>
-        <p class="lead text-muted">Send an inquiry about this property</p>
+        <h1 class="display-5 fw-bold mb-2" style="font-family: var(--font-heading);">Inquire About Property</h1>
+        <p class="lead opacity-75 font-sans">Get in touch with our agents to schedule a viewing or ask questions.</p>
     </div>
 </section>
 
-<section class="py-5">
-    <div class="container">
-        <div class="row">
-            <!-- Property Summary -->
-            <div class="col-lg-4 mb-4">
-                <div class="card">
-                    {% if property.images.all %}
-                        {% with property.images.all.0 as first_image %}
-                            <img src="{{ first_image.image.url }}" class="card-img-top" alt="{{ property.title }}">
-                        {% endwith %}
-                    {% else %}
-                        <img src="https://via.placeholder.com/400x250?text=No+Image" class="card-img-top" alt="No image">
-                    {% endif %}
+<section class="py-5 bg-light" style="min-height: 70vh;">
+    <div class="container" style="margin-top: -50px;">
+        <div class="row g-4">
+            
+            <div class="col-lg-4">
+                <div class="card shadow-lg border-0 rounded-4 overflow-hidden h-100">
+                    <div class="position-relative" style="height: 250px;">
+                        {% if property.images.first %}
+                            <img src="{{ property.images.first.image.url }}" class="w-100 h-100 object-fit-cover" alt="{{ property.title }}">
+                        {% else %}
+                            <div class="bg-secondary w-100 h-100 d-flex align-items-center justify-content-center text-white">
+                                <i class="bi bi-image fs-1"></i>
+                            </div>
+                        {% endif %}
+                        <span class="badge bg-white text-dark position-absolute top-0 start-0 m-3 shadow-sm px-3 py-2 rounded-pill fw-bold">
+                            {{ property.get_listing_type_display }}
+                        </span>
+                    </div>
                     
-                    <div class="card-body">
-                        <h5 class="card-title">{{ property.title }}</h5>
-                        <p class="property-price mb-2">
-                            {{ property.currency }} {{ property.price|floatformat:0 }}
-                        </p>
-                        <p class="text-muted small mb-3">
-                            <i class="bi bi-geo-alt"></i> {{ property.city }}, {{ property.state }}
+                    <div class="card-body p-4">
+                        <h5 class="card-title fw-bold mb-2" style="font-family: var(--font-heading);">{{ property.title }}</h5>
+                        <h4 class="text-primary fw-bold mb-3">
+                            {{ property.currency }} {{ property.price|floatformat:0|intcomma }}
+                        </h4>
+                        
+                        <p class="text-muted small mb-4 border-bottom pb-3">
+                            <i class="bi bi-geo-alt-fill text-danger me-1"></i> {{ property.address }}, {{ property.city }}
                         </p>
                         
-                        <div class="d-flex gap-3 text-muted small">
-                            {% if not property.is_land %}
-                                {% if property.bedrooms %}
-                                    <span><i class="bi bi-door-closed"></i> {{ property.bedrooms }} Beds</span>
-                                {% endif %}
-                                {% if property.bathrooms %}
-                                    <span><i class="bi bi-droplet"></i> {{ property.bathrooms }} Baths</span>
-                                {% endif %}
-                            {% else %}
-                                {% if property.land_size_acres %}
-                                    <span><i class="bi bi-geo"></i> {{ property.land_size_acres }} acres</span>
-                                {% endif %}
-                            {% endif %}
+                        <div class="d-flex justify-content-between text-muted small mb-4">
+                            <span><i class="bi bi-door-closed me-1"></i> {{ property.bedrooms }} Beds</span>
+                            <span><i class="bi bi-droplet me-1"></i> {{ property.bathrooms }} Baths</span>
+                            <span><i class="bi bi-aspect-ratio me-1"></i> {{ property.area_sqft|intcomma }} SqFt</span>
                         </div>
 
-                        <hr>
-
-                        <a href="{% url 'property_detail' property.pk %}" class="btn btn-outline-primary w-100">
-                            <i class="bi bi-arrow-left"></i> Back to Property
+                        <a href="{% url 'property_detail' property.pk %}" class="btn btn-outline-secondary w-100 rounded-pill fw-bold">
+                            <i class="bi bi-arrow-left me-2"></i> Back to Listing
                         </a>
                     </div>
                 </div>
             </div>
 
-            <!-- Inquiry Form -->
             <div class="col-lg-8">
-                <div class="search-box">
-                    <h5 class="mb-4">Send Your Inquiry</h5>
-                    
-                    <form method="post">
-                        {% csrf_token %}
-                        
-                        <div class="mb-4">
-                            <label for="{{ form.inquirer_name.id_for_label }}" class="form-label fw-bold">
-                                {{ form.inquirer_name.label }} <span class="text-danger">*</span>
-                            </label>
-                            {{ form.inquirer_name }}
-                            {% if form.inquirer_name.errors %}
-                                <div class="text-danger small mt-1">{{ form.inquirer_name.errors }}</div>
-                            {% endif %}
-                        </div>
+                <div class="card shadow-lg border-0 rounded-4">
+                    <div class="card-header bg-white border-0 p-4 pb-0">
+                        <h4 class="fw-bold mb-0" style="font-family: var(--font-heading); color: var(--brand-primary);">Send Message</h4>
+                    </div>
+                    <div class="card-body p-4 pt-3">
+                        <form method="post">
+                            {% csrf_token %}
+                            
+                            <div class="row g-3">
+                                <div class="col-md-6">
+                                    <label class="form-label fw-bold small text-uppercase text-muted">Full Name <span class="text-danger">*</span></label>
+                                    {{ form.inquirer_name }}
+                                    {% if form.inquirer_name.errors %}
+                                        <div class="text-danger small mt-1">{{ form.inquirer_name.errors.0 }}</div>
+                                    {% endif %}
+                                </div>
 
-                        <div class="mb-4">
-                            <label for="{{ form.inquirer_email.id_for_label }}" class="form-label fw-bold">
-                                {{ form.inquirer_email.label }} <span class="text-danger">*</span>
-                            </label>
-                            {{ form.inquirer_email }}
-                            {% if form.inquirer_email.errors %}
-                                <div class="text-danger small mt-1">{{ form.inquirer_email.errors }}</div>
-                            {% endif %}
-                        </div>
+                                <div class="col-md-6">
+                                    <label class="form-label fw-bold small text-uppercase text-muted">Email Address <span class="text-danger">*</span></label>
+                                    {{ form.inquirer_email }}
+                                    {% if form.inquirer_email.errors %}
+                                        <div class="text-danger small mt-1">{{ form.inquirer_email.errors.0 }}</div>
+                                    {% endif %}
+                                </div>
 
-                        <div class="mb-4">
-                            <label for="{{ form.inquirer_phone.id_for_label }}" class="form-label fw-bold">
-                                {{ form.inquirer_phone.label }}
-                            </label>
-                            {{ form.inquirer_phone }}
-                            {% if form.inquirer_phone.errors %}
-                                <div class="text-danger small mt-1">{{ form.inquirer_phone.errors }}</div>
-                            {% endif %}
-                            <small class="text-muted">Optional - we'll call you back if needed</small>
-                        </div>
+                                <div class="col-12">
+                                    <label class="form-label fw-bold small text-uppercase text-muted">Phone Number (Optional)</label>
+                                    {{ form.inquirer_phone }}
+                                </div>
 
-                        <div class="mb-4">
-                            <label for="{{ form.message.id_for_label }}" class="form-label fw-bold">
-                                {{ form.message.label }} <span class="text-danger">*</span>
-                            </label>
-                            {{ form.message }}
-                            {% if form.message.errors %}
-                                <div class="text-danger small mt-1">{{ form.message.errors }}</div>
-                            {% endif %}
-                        </div>
+                                <div class="col-12">
+                                    <label class="form-label fw-bold small text-uppercase text-muted">Message <span class="text-danger">*</span></label>
+                                    {{ form.message }}
+                                    {% if form.message.errors %}
+                                        <div class="text-danger small mt-1">{{ form.message.errors.0 }}</div>
+                                    {% endif %}
+                                </div>
+                            </div>
 
-                        <div class="alert alert-info">
-                            <i class="bi bi-info-circle"></i>
-                            <strong>Privacy Notice:</strong> Your contact information will only be shared with the property owner/agent and will not be used for marketing purposes.
-                        </div>
+                            <div class="alert alert-light border d-flex align-items-center mt-4 rounded-3 p-3 text-muted small">
+                                <i class="bi bi-shield-lock-fill fs-4 me-3 text-success"></i>
+                                <div>
+                                    <strong>Privacy Guarantee:</strong> Your details are sent directly to the agent and will never be shared with third parties.
+                                </div>
+                            </div>
 
-                        <div class="d-grid gap-2">
-                            <button type="submit" class="btn btn-primary btn-lg">
-                                <i class="bi bi-send"></i> Send Inquiry
-                            </button>
-                            <a href="{% url 'property_detail' property.pk %}" class="btn btn-outline-secondary">
-                                Cancel
-                            </a>
-                        </div>
-                    </form>
+                            <div class="d-grid mt-4">
+                                <button type="submit" class="btn btn-primary btn-lg rounded-pill fw-bold shadow-sm py-3">
+                                    <i class="bi bi-send-fill me-2"></i> Send Inquiry
+                                </button>
+                            </div>
+                        </form>
+                    </div>
                 </div>
             </div>
         </div>
     </div>
 </section>
+
+<style>
+    /* Local Styling Enhancements */
+    .object-fit-cover { object-fit: cover; }
+    
+    /* Ensure form inputs created by Django match the theme */
+    input[type="text"], input[type="email"], textarea {
+        display: block;
+        width: 100%;
+        padding: 0.75rem 1rem;
+        font-size: 1rem;
+        font-weight: 400;
+        line-height: 1.5;
+        color: #212529;
+        background-color: #fff;
+        background-clip: padding-box;
+        border: 1px solid #ced4da;
+        appearance: none;
+        border-radius: 0.5rem; /* Rounded inputs */
+        transition: border-color .15s ease-in-out,box-shadow .15s ease-in-out;
+    }
+
+    input:focus, textarea:focus {
+        border-color: var(--brand-primary);
+        outline: 0;
+        box-shadow: 0 0 0 0.25rem rgba(27, 77, 62, 0.15);
+    }
+</style>
 {% endblock %}

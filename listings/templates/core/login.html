@@ -1,0 +1,130 @@
+{% extends 'properties/base.html' %}
+{% load static %}
+
+{% block title %}Login | ArthiProperties{% endblock %}
+
+{% block extra_css %}
+<style>
+    /* Override base padding for full-screen split layout */
+    body { padding-top: 0 !important; }
+    
+    /* Split Layout Styles */
+    .login-split-screen {
+        min-height: 100vh;
+        display: flex;
+    }
+    
+    .login-visual {
+        background-image: url('https://images.unsplash.com/photo-1600585154340-be6161a56a0c?ixlib=rb-4.0.3&auto=format&fit=crop&w=1920&q=80');
+        background-size: cover;
+        background-position: center;
+        position: relative;
+    }
+    
+    .login-visual::before {
+        content: '';
+        position: absolute;
+        inset: 0;
+        background: linear-gradient(to bottom, rgba(27, 77, 62, 0.4), rgba(27, 77, 62, 0.8));
+    }
+
+    /* Form Styles */
+    .form-control {
+        padding: 0.8rem 1.2rem;
+        border-radius: 0.5rem;
+        border: 1px solid #e0e0e0;
+        background-color: #f8f9fa;
+        font-size: 0.95rem;
+    }
+    .form-control:focus {
+        background-color: #fff;
+        border-color: var(--brand-primary);
+        box-shadow: 0 0 0 4px rgba(27, 77, 62, 0.1);
+    }
+    
+    .brand-heading {
+        font-family: var(--font-heading);
+        color: var(--brand-primary);
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="container-fluid p-0">
+    <div class="row g-0 login-split-screen">
+        
+        <div class="col-lg-6 d-none d-lg-block login-visual position-relative">
+            <div class="position-absolute bottom-0 start-0 p-5 text-white" style="z-index: 2;">
+                <h2 class="display-4 fw-bold mb-3" style="font-family: var(--font-heading);">Welcome Home</h2>
+                <p class="lead opacity-75 font-sans" style="max-width: 400px;">
+                    Sign in to access exclusive listings, manage your viewings, and find your perfect sanctuary.
+                </p>
+                <div class="mt-4 pt-4 border-top border-white border-opacity-25">
+                    <small class="text-white-50 text-uppercase letter-spacing-2">ArthiProperties Member Access</small>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-lg-6 d-flex align-items-center justify-content-center bg-white">
+            <div class="p-4 p-md-5 w-100" style="max-width: 550px;">
+                
+                <div class="text-center mb-4 d-lg-none">
+                    <span class="d-inline-flex align-items-center justify-content-center bg-light text-primary rounded-circle shadow-sm mb-2" style="width: 50px; height: 50px; color: var(--brand-primary) !important;">
+                        <i class="bi bi-tree-fill fs-4"></i>
+                    </span>
+                    <h4 class="brand-heading fw-bold">ArthiProperties</h4>
+                </div>
+
+                <div class="mb-5">
+                    <h2 class="brand-heading fw-bold mb-2">Welcome Back</h2>
+                    <p class="text-muted">Please enter your details to sign in.</p>
+                </div>
+
+                <form method="post" class="needs-validation">
+                    {% csrf_token %}
+                    
+                    {% if form.errors %}
+                        <div class="alert alert-danger border-0 rounded-3 shadow-sm mb-4 d-flex align-items-center gap-3">
+                            <i class="bi bi-exclamation-circle-fill fs-5"></i>
+                            <div>
+                                <strong>Login Failed</strong><br>
+                                <small>Please check your username and password.</small>
+                            </div>
+                        </div>
+                    {% endif %}
+
+                    <div class="mb-4">
+                        <label class="form-label fw-bold small text-uppercase text-muted">Username</label>
+                        <div class="input-group">
+                            <span class="input-group-text bg-light border-end-0 text-muted border"><i class="bi bi-person"></i></span>
+                            <input type="text" name="username" class="form-control border-start-0 ps-0" placeholder="Enter your username" required>
+                        </div>
+                    </div>
+
+                    <div class="mb-4">
+                        <div class="d-flex justify-content-between">
+                            <label class="form-label fw-bold small text-uppercase text-muted">Password</label>
+                            <a href="#" class="small text-decoration-none" style="color: var(--brand-primary);">Forgot password?</a>
+                        </div>
+                        <div class="input-group">
+                            <span class="input-group-text bg-light border-end-0 text-muted border"><i class="bi bi-lock"></i></span>
+                            <input type="password" name="password" class="form-control border-start-0 ps-0" placeholder="Enter your password" required>
+                        </div>
+                    </div>
+
+                    <button type="submit" class="btn btn-primary w-100 rounded-pill py-3 fw-bold shadow-sm mt-2">
+                        Sign In <i class="bi bi-arrow-right ms-2"></i>
+                    </button>
+                </form>
+
+                <div class="text-center mt-5 pt-4 border-top">
+                    <p class="text-muted small">Don't have an account yet?</p>
+                    <a href="{% url 'register' %}" class="btn btn-outline-secondary rounded-pill px-4 fw-bold">
+                        Create Account
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
