@@ -42,6 +42,7 @@ INSTALLED_APPS = [
     'django.contrib.staticfiles',
     'rest_framework',
     'corsheaders',
+    'django.contrib.humanize',
     'listings',
     'core',
     'booking',
@@ -123,7 +124,16 @@ USE_TZ = True
 # Static files (CSS, JavaScript, Images)
 # https://docs.djangoproject.com/en/6.0/howto/static-files/
 
+
 STATIC_URL = 'static/'
+STATICFILES_DIRS = [BASE_DIR / 'static'] 
+STATIC_ROOT = BASE_DIR / 'staticfiles'   
+
+MEDIA_URL = '/media/'                    
+MEDIA_ROOT = BASE_DIR / 'media'          
+
+DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
+
 
 
 
@@ -142,3 +152,51 @@ REFRESH_TOKEN_LIFETIME = timedelta(days=1)
 
 CORS_ALLOW_ALL_ORIGINS = True
 CORS_ALLOW_CREDENTIALS = True
+
+
+# ... existing settings ...
+
+# ------------------------------------------------------------------------------
+# JAZZMIN SETTINGS
+# ------------------------------------------------------------------------------
+
+JAZZMIN_SETTINGS = {
+    "site_title": "ArthiProperties Admin",
+    "site_header": "ArthiProperties",
+    "site_brand": "ArthiProperties",
+    "welcome_sign": "Welcome to the HQ",
+    "copyright": "ArthiProperties Ltd",
+    "search_model": ["listings.Property", "auth.User"],
+    "user_avatar": None,
+    # Load the custom CSS
+    "custom_css": "css/admin_theme.css",
+    "show_ui_builder": False,
+}
+
+JAZZMIN_UI_TWEAKS = {
+    "navbar_small_text": False,
+    "footer_small_text": False,
+    "body_small_text": False,
+    "brand_small_text": False,
+    "brand_colour": "navbar-dark",
+    "accent": "accent-primary",
+    "navbar": "navbar-white navbar-light",
+    "no_navbar_border": False,
+    "navbar_fixed": True,
+    "layout_boxed": False,
+    "footer_fixed": False,
+    "sidebar_fixed": True,
+    "sidebar": "sidebar-dark-primary",
+    "sidebar_nav_small_text": False,
+    "theme": "default",
+    "dark_mode_theme": None,
+    "button_classes": {
+        "primary": "btn-primary",
+        "secondary": "btn-secondary",
+        "info": "btn-info",
+        "warning": "btn-warning",
+        "danger": "btn-danger",
+        "success": "btn-success"
+    }
+}
+

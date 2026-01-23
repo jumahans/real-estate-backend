@@ -1,309 +1,421 @@
 {% extends 'properties/base.html' %}
 {% load static %}
+{% load humanize %}
 
-{% block title %}Browse Properties{% endblock %}
+{% block title %}Discover ArthiProperties{% endblock %}
+
+{% block extra_css %}
+<style>
+    /* --- CORE LAYOUT STYLES --- */
+    body { padding-top: 0 !important; } /* Override base padding for full hero */
+    
+    .hero-section {
+        height: 100vh;
+        min-height: 600px;
+        position: relative;
+        overflow: hidden;
+    }
+
+    .carousel-inner, .carousel-item { height: 100%; }
+
+    /* Ken Burns Zoom Effect */
+    .hero-img {
+        object-fit: cover;
+        transform-origin: center;
+        animation: kenBurns 25s infinite alternate;
+    }
+    @keyframes kenBurns {
+        0% { transform: scale(1); }
+        100% { transform: scale(1.15); }
+    }
+
+    /* Dark Overlay */
+    .overlay {
+        position: absolute;
+        inset: 0;
+        background: linear-gradient(to bottom, rgba(27, 77, 62, 0.3) 0%, rgba(0,0,0,0.5) 50%, rgba(0,0,0,0.8) 100%);
+        z-index: 1;
+    }
+
+    /* Glassmorphism Search */
+    .glass-search {
+        background: rgba(255, 255, 255, 0.1);
+        backdrop-filter: blur(12px);
+        -webkit-backdrop-filter: blur(12px);
+        border: 1px solid rgba(255, 255, 255, 0.2);
+        box-shadow: 0 20px 40px rgba(0, 0, 0, 0.3);
+    }
+    .glass-search input::placeholder { color: rgba(255, 255, 255, 0.8); }
+    .glass-search input { color: white !important; }
+
+    /* Sticky Sidebar */
+    .filter-sidebar {
+        position: sticky;
+        top: 100px;
+        height: calc(100vh - 120px);
+        overflow-y: auto;
+        padding-right: 5px;
+    }
+    .filter-sidebar::-webkit-scrollbar { width: 4px; }
+    .filter-sidebar::-webkit-scrollbar-thumb { background-color: var(--brand-secondary); border-radius: 4px; }
+
+
+    /* --- THEME INTEGRATION & REFINEMENTS --- */
+
+    /* Hero Branding */
+    .hero-badge {
+        background: rgba(27, 77, 62, 0.85); /* Emerald background */
+        color: var(--brand-secondary) !important; /* Gold text */
+        border: 1px solid var(--brand-secondary) !important;
+        backdrop-filter: blur(4px);
+    }
+    
+    .scroll-down-btn { color: var(--brand-secondary) !important; }
+    .scroll-mouse { border-color: var(--brand-secondary) !important; }
+    .scroll-wheel { background: var(--brand-secondary) !important; }
+
+    /* Filter Sidebar Theming */
+    .filter-sidebar .card-header h5 { color: var(--brand-primary); font-family: var(--font-heading); }
+    .form-label.text-muted { color: var(--brand-primary) !important; opacity: 0.8; }
+    
+    /* Custom Form Focus (Emerald Glow) */
+    .form-select:focus, .form-control:focus {
+        border-color: var(--brand-primary);
+        box-shadow: 0 0 0 0.25rem rgba(27, 77, 62, 0.2);
+    }
+
+    /* Property Card Theming */
+    .property-card {
+        transition: all 0.3s cubic-bezier(0.25, 0.8, 0.25, 1);
+        border: 1px solid transparent; /* Prep for hover border */
+    }
+    .property-card:hover {
+        transform: translateY(-8px);
+        box-shadow: 0 15px 30px rgba(27, 77, 62, 0.1) !important;
+        border-color: rgba(197, 160, 89, 0.5); /* Subtle Gold Border on Hover */
+    }
+    
+    .property-card .price-text { color: var(--brand-primary) !important; font-family: var(--font-heading); }
+    .property-card .card-title a { font-family: var(--font-heading); color: var(--brand-dark) !important; }
+    .property-card .card-title a:hover { color: var(--brand-primary) !important; }
+    
+    /* Card Icons */
+    .card-info-icons i { color: var(--brand-secondary); opacity: 0.9; }
+
+    /* Custom Branded Badges */
+    .badge-arthi-type {
+        background-color: #f2ede4; /* Very pale gold/cream */
+        color: var(--brand-primary);
+        border: 1px solid rgba(197, 160, 89, 0.3);
+    }
+    .badge-arthi-available {
+        background-color: var(--brand-primary);
+        color: white;
+    }
+    
+    /* Quick View Overlay */
+    .quick-view-overlay { opacity: 0; transition: 0.3s; }
+    .property-card:hover .quick-view-overlay { opacity: 1; }
+
+    /* Mobile Filter Fab */
+    .mobile-filter-fab {
+        position: fixed; bottom: 30px; left: 50%; transform: translateX(-50%); z-index: 990;
+        box-shadow: 0 10px 25px rgba(27, 77, 62, 0.3);
+    }
+    
+    /* Utilities */
+    .object-fit-cover { object-fit: cover; }
+    .stretched-link-z { position: static; }
+</style>
+{% endblock %}
 
 {% block content %}
+<script>document.body.classList.add('has-hero');</script>
 
-<section class="hero-section bg-light py-5">
-    <div class="container">
-        <div class="row align-items-center">
-            <div class="col-lg-6 mb-4 mb-lg-0">
-                <h1 class="display-4 fw-bold mb-3">Find Your Dream Property</h1>
-                <p class="lead text-muted">Browse {{ total_count }} available properties</p>
-            </div>
-            <div class="col-lg-6">
-                <div class="search-box">
-                    <form method="get" action="{% url 'property_list' %}">
-                        <div class="row g-3">
-                            <div class="col-md-6">
-                                <input type="text" class="form-control" name="search" placeholder="Search by location, title..." value="{{ search_query }}">
-                            </div>
-                            <div class="col-md-6">
-                                <select class="form-select" name="property_type">
-                                    <option value="">All Types</option>
-                                    {% for value, label in property_types %}
-                                        <option value="{{ value }}" {% if request.GET.property_type == value %}selected{% endif %}>{{ label }}</option>
-                                    {% endfor %}
-                                </select>
-                            </div>
-                            <div class="col-md-4">
-                                <input type="number" class="form-control" name="min_price" placeholder="Min Price" value="{{ request.GET.min_price }}">
-                            </div>
-                            <div class="col-md-4">
-                                <input type="number" class="form-control" name="max_price" placeholder="Max Price" value="{{ request.GET.max_price }}">
-                            </div>
-                            <div class="col-md-4">
-                                <button type="submit" class="btn btn-primary w-100">
-                                    <i class="bi bi-search"></i> Search
-                                </button>
-                            </div>
-                        </div>
-                    </form>
-                </div>
-            </div>
-        </div>
-    </div>
-</section>
-
-<section class="filters-section py-3 bg-white border-bottom">
-    <div class="container">
-        <div class="d-flex flex-wrap gap-2 align-items-center">
-            <span class="fw-bold me-2">Quick Filters:</span>
-            {% for value, label in listing_types %}
-                <a href="?listing_type={{ value }}" class="btn btn-sm btn-outline-primary {% if request.GET.listing_type == value %}active{% endif %}">
-                    <i class="bi bi-tag"></i> {{ label }}
-                </a>
-            {% endfor %}
-            <a href="?is_waterfront=true" class="btn btn-sm btn-outline-info {% if request.GET.is_waterfront == 'true' %}active{% endif %}">
-                <i class="bi bi-water"></i> Waterfront
-            </a>
-            <a href="{% url 'property_list' %}" class="btn btn-sm btn-outline-danger">
-                <i class="bi bi-x-circle"></i> Clear All
-            </a>
-        </div>
-    </div>
-</section>
-
-<section class="properties-section py-5">
-    <div class="container">
-        <div class="row">
-            
-            <div class="col-lg-3 mb-4">
-                <div class="filter-sidebar">
-                    <h5 class="mb-4"><i class="bi bi-sliders"></i> Filters</h5>
-                    <form method="get">
-                        
-                        <div class="mb-4">
-                            <label class="form-label fw-bold">City</label>
-                            <select class="form-select" name="city">
-                                <option value="">All Cities</option>
-                                {% for city in cities %}
-                                    <option value="{{ city }}" {% if request.GET.city == city %}selected{% endif %}>{{ city }}</option>
-                                {% endfor %}
-                            </select>
-                        </div>
-
-                        <div class="mb-4">
-                            <label class="form-label fw-bold">Property Type</label>
-                            <select class="form-select" name="property_type">
-                                <option value="">All Types</option>
-                                {% for value, label in property_types %}
-                                    <option value="{{ value }}" {% if request.GET.property_type == value %}selected{% endif %}>{{ label }}</option>
-                                {% endfor %}
-                            </select>
-                        </div>
-
-                        <div class="mb-4">
-                            <label class="form-label fw-bold">Listing Type</label>
-                            <select class="form-select" name="listing_type">
-                                <option value="">Any</option>
-                                {% for value, label in listing_types %}
-                                    <option value="{{ value }}" {% if request.GET.listing_type == value %}selected{% endif %}>{{ label }}</option>
-                                {% endfor %}
-                            </select>
-                        </div>
-
-                        <div class="mb-4">
-                            <label class="form-label fw-bold">Price Range</label>
-                            <div class="row g-2">
-                                <div class="col-6">
-                                    <input type="number" class="form-control form-control-sm" name="min_price" placeholder="Min" value="{{ request.GET.min_price }}">
-                                </div>
-                                <div class="col-6">
-                                    <input type="number" class="form-control form-control-sm" name="max_price" placeholder="Max" value="{{ request.GET.max_price }}">
-                                </div>
-                            </div>
-                        </div>
-
-                        <div class="mb-4">
-                            <label class="form-label fw-bold">Bedrooms</label>
-                            <select class="form-select" name="min_bedrooms">
-                                <option value="">Any</option>
-                                <option value="1" {% if request.GET.min_bedrooms == '1' %}selected{% endif %}>1+</option>
-                                <option value="2" {% if request.GET.min_bedrooms == '2' %}selected{% endif %}>2+</option>
-                                <option value="3" {% if request.GET.min_bedrooms == '3' %}selected{% endif %}>3+</option>
-                                <option value="4" {% if request.GET.min_bedrooms == '4' %}selected{% endif %}>4+</option>
-                                <option value="5" {% if request.GET.min_bedrooms == '5' %}selected{% endif %}>5+</option>
-                            </select>
-                        </div>
-
-                        <div class="mb-4">
-                            <label class="form-label fw-bold">Zoning</label>
-                            <select class="form-select" name="zoning_type">
-                                <option value="">Any</option>
-                                {% for value, label in zoning_types %}
-                                    <option value="{{ value }}" {% if request.GET.zoning_type == value %}selected{% endif %}>{{ label }}</option>
-                                {% endfor %}
-                            </select>
-                        </div>
-
-                        <div class="mb-4">
-                            <div class="form-check">
-                                <input class="form-check-input" type="checkbox" name="is_waterfront" value="true" id="waterfront" {% if request.GET.is_waterfront == 'true' %}checked{% endif %}>
-                                <label class="form-check-label" for="waterfront">Waterfront</label>
-                            </div>
-                        </div>
-
-                        <div class="mb-4">
-                            <label class="form-label fw-bold">Sort By</label>
-                            <select class="form-select" name="sort">
-                                <option value="-created_at" {% if request.GET.sort == '-created_at' or not request.GET.sort %}selected{% endif %}>Newest First</option>
-                                <option value="created_at" {% if request.GET.sort == 'created_at' %}selected{% endif %}>Oldest First</option>
-                                <option value="price" {% if request.GET.sort == 'price' %}selected{% endif %}>Price: Low to High</option>
-                                <option value="-price" {% if request.GET.sort == '-price' %}selected{% endif %}>Price: High to Low</option>
-                            </select>
-                        </div>
-
-                        <button type="submit" class="btn btn-primary w-100 mb-2">
-                            <i class="bi bi-filter"></i> Apply Filters
-                        </button>
-                        <a href="{% url 'property_list' %}" class="btn btn-outline-secondary w-100">
-                            <i class="bi bi-x"></i> Clear All
-                        </a>
-                    </form>
-                </div>
-            </div>
-
-            <div class="col-lg-9">
-                <div class="d-flex justify-content-between align-items-center mb-4">
-                    <h4 class="mb-0">{{ total_count }} Properties Found</h4>
-                    <a href="{% url 'property_search' %}" class="btn btn-outline-primary">
-                        <i class="bi bi-search"></i> Advanced Search
-                    </a>
-                </div>
-
-                {% if properties %}
-                    <div class="row g-4">
-                        {% for property in properties %}
-                            <div class="col-md-6 col-lg-4">
-                                <div class="card property-card h-100">
-                                    <div class="position-relative">
-                                        {% if property.images.all %}
-                                            {% with property.images.all.0 as first_image %}
-                                                <img src="{{ first_image.image.url }}" class="card-img-top" alt="{{ property.title }}" loading="lazy">
-                                            {% endwith %}
-                                        {% else %}
-                                            <img src="https://via.placeholder.com/400x250?text=No+Image" class="card-img-top" alt="No image">
-                                        {% endif %}
-                                        
-                                        {% if user.is_authenticated %}
-                                            <form method="post" action="{% url 'property_favorite_toggle' property.pk %}" class="d-inline">
-                                                {% csrf_token %}
-                                                <button type="submit" class="favorite-btn">
-                                                    <i class="bi bi-heart-fill"></i>
-                                                </button>
-                                            </form>
-                                        {% endif %}
-
-                                        <span class="badge bg-primary position-absolute top-0 start-0 m-2">
-                                            {{ property.get_listing_type_display }}
-                                        </span>
-                                    </div>
-                                    
-                                    <div class="card-body">
-                                        <h5 class="card-title">
-                                            <a href="{% url 'property_detail' property.pk %}" class="text-decoration-none text-dark">
-                                                {{ property.title|truncatewords:8 }}
-                                            </a>
-                                        </h5>
-                                        
-                                        <p class="property-price mb-2">
-                                            {{ property.currency }} {{ property.price|floatformat:0 }}
-                                        </p>
-                                        
-                                        <p class="text-muted small mb-3">
-                                            <i class="bi bi-geo-alt"></i> {{ property.city }}, {{ property.state }}
-                                        </p>
-                                        
-                                        <div class="d-flex gap-3 text-muted small">
-                                            {% if not property.is_land %}
-                                                {% if property.bedrooms %}
-                                                    <span><i class="bi bi-door-closed"></i> {{ property.bedrooms }} Beds</span>
-                                                {% endif %}
-                                                {% if property.bathrooms %}
-                                                    <span><i class="bi bi-droplet"></i> {{ property.bathrooms }} Baths</span>
-                                                {% endif %}
-                                                {% if property.area_sqft %}
-                                                    <span><i class="bi bi-arrows-angle-expand"></i> {{ property.area_sqft|floatformat:0 }} sqft</span>
-                                                {% endif %}
-                                            {% else %}
-                                                {% if property.land_size_acres %}
-                                                    <span><i class="bi bi-geo"></i> {{ property.land_size_acres }} acres</span>
-                                                {% endif %}
-                                                {% if property.zoning_type %}
-                                                    <span><i class="bi bi-file-text"></i> {{ property.get_zoning_type_display }}</span>
-                                                {% endif %}
-                                            {% endif %}
-                                        </div>
-                                        
-                                        <div class="mt-3">
-                                            <span class="badge badge-custom bg-light text-dark">{{ property.get_property_type_display }}</span>
-                                            {% if property.is_waterfront %}
-                                                <span class="badge badge-custom bg-info text-white">Waterfront</span>
-                                            {% endif %}
-                                        </div>
-                                    </div>
-                                    
-                                    <div class="card-footer bg-white border-top-0">
-                                        <a href="{% url 'property_detail' property.pk %}" class="btn btn-outline-primary w-100">
-                                            View Details <i class="bi bi-arrow-right"></i>
-                                        </a>
-                                    </div>
-                                </div>
-                            </div>
-                        {% endfor %}
-                    </div>
-
-                    {% if properties.has_other_pages %}
-                        <nav aria-label="Page navigation" class="mt-5">
-                            <ul class="pagination justify-content-center">
-                                {% if properties.has_previous %}
-                                    <li class="page-item">
-                                        <a class="page-link" href="?page=1{% for key, value in request.GET.items %}{% if key != 'page' %}&{{ key }}={{ value }}{% endif %}{% endfor %}">
-                                            <i class="bi bi-chevron-double-left"></i>
-                                        </a>
-                                    </li>
-                                    <li class="page-item">
-                                        <a class="page-link" href="?page={{ properties.previous_page_number }}{% for key, value in request.GET.items %}{% if key != 'page' %}&{{ key }}={{ value }}{% endif %}{% endfor %}">
-                                            <i class="bi bi-chevron-left"></i>
-                                        </a>
-                                    </li>
-                                {% endif %}
-
-                                <li class="page-item active">
-                                    <span class="page-link">Page {{ properties.number }} of {{ properties.paginator.num_pages }}</span>
-                                </li>
-
-                                {% if properties.has_next %}
-                                    <li class="page-item">
-                                        <a class="page-link" href="?page={{ properties.next_page_number }}{% for key, value in request.GET.items %}{% if key != 'page' %}&{{ key }}={{ value }}{% endif %}{% endfor %}">
-                                            <i class="bi bi-chevron-right"></i>
-                                        </a>
-                                    </li>
-                                    <li class="page-item">
-                                        <a class="page-link" href="?page={{ properties.paginator.num_pages }}{% for key, value in request.GET.items %}{% if key != 'page' %}&{{ key }}={{ value }}{% endif %}{% endfor %}">
-                                            <i class="bi bi-chevron-double-right"></i>
-                                        </a>
-                                    </li>
-                                {% endif %}
-                            </ul>
-                        </nav>
-                    {% endif %}
-
+<div class="hero-section">
+    <div id="heroCarousel" class="carousel slide carousel-fade h-100" data-bs-ride="carousel" data-bs-interval="6000">
+        <div class="carousel-inner h-100">
+            <div class="carousel-item active h-100">
+                <div class="overlay"></div>
+                {% if properties.0 and properties.0.images.first %}
+                    <img src="{{ properties.0.images.first.image.url }}" class="d-block w-100 h-100 hero-img" alt="{{ properties.0.title }}">
                 {% else %}
-                    <div class="text-center py-5">
-                        <i class="bi bi-search display-1 text-muted"></i>
-                        <h3 class="mt-3">No Properties Found</h3>
-                        <p class="text-muted">Try adjusting your filters or search criteria</p>
-                        <a href="{% url 'property_list' %}" class="btn btn-primary mt-3">
-                            <i class="bi bi-arrow-clockwise"></i> Reset Filters
-                        </a>
-                    </div>
+                    <img src="https://images.unsplash.com/photo-1613490493576-7fde63acd811?q=80&w=1920&auto=format&fit=crop" class="d-block w-100 h-100 hero-img" alt="Luxury Home">
+                {% endif %}
+            </div>
+            <div class="carousel-item h-100">
+                <div class="overlay"></div>
+                {% if properties.1 and properties.1.images.first %}
+                    <img src="{{ properties.1.images.first.image.url }}" class="d-block w-100 h-100 hero-img" alt="{{ properties.1.title }}">
+                {% else %}
+                    <img src="https://images.unsplash.com/photo-1600210492486-724fe5c67fb0?q=80&w=1920&auto=format&fit=crop" class="d-block w-100 h-100 hero-img" alt="Interior">
+                {% endif %}
+            </div>
+            <div class="carousel-item h-100">
+                <div class="overlay"></div>
+                {% if properties.2 and properties.2.images.first %}
+                    <img src="{{ properties.2.images.first.image.url }}" class="d-block w-100 h-100 hero-img" alt="{{ properties.2.title }}">
+                {% else %}
+                    <img src="https://images.unsplash.com/photo-1512917774080-9991f1c4c750?q=80&w=1920&auto=format&fit=crop" class="d-block w-100 h-100 hero-img" alt="Pool">
                 {% endif %}
             </div>
         </div>
     </div>
-</section>
 
+    <div class="position-absolute top-50 start-50 translate-middle w-100 text-center px-3" style="z-index: 3;">
+        <div class="col-lg-8 mx-auto text-white">
+            <span class="badge hero-badge text-uppercase letter-spacing-2 mb-4 px-4 py-2 rounded-pill animate-fade-down shadow-sm">
+                ArthiProperties Exclusive
+            </span>
+            <h1 class="display-2 fw-bold mb-4 text-white" style="text-shadow: 0 4px 20px rgba(0,0,0,0.6); font-family: var(--font-heading);">Find Your Sanctuary</h1>
+            
+            <div class="glass-search p-2 rounded-pill mx-auto" style="max-width: 700px;">
+                <form method="get" class="d-flex align-items-center">
+                    <i class="bi bi-search ms-3 text-white fs-5 opacity-75"></i>
+                    <input type="text" name="q" class="form-control border-0 shadow-none form-control-lg bg-transparent text-white placeholder-white" 
+                           placeholder="Search by city, neighborhood, or address..." 
+                           value="{{ request.GET.q|default:'' }}">
+                    <button class="btn btn-primary rounded-pill px-5 py-3 fw-bold shadow-lg" type="submit">Search</button>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <a href="#content-start" class="scroll-down-btn text-decoration-none">
+        <span class="small d-block mb-2 fw-bold text-uppercase" style="letter-spacing: 2px; font-size: 0.75rem;">Scroll to Explore</span>
+        <div class="scroll-mouse">
+            <div class="scroll-wheel"></div>
+        </div>
+    </a>
+</div>
+
+<div id="content-start" class="container-fluid px-lg-5 py-5" style="background-color: #f8f9fa;">
+    <div class="row g-4">
+        
+        <div class="col-lg-3 d-none d-lg-block">
+            <div class="filter-sidebar">
+                <div class="card border-0 shadow-sm rounded-4">
+                    <div class="card-header bg-white border-0 pt-4 pb-0 px-4">
+                        <div class="d-flex justify-content-between align-items-center">
+                            <h5 class="fw-bold mb-0"><i class="bi bi-sliders me-2 opacity-75"></i>Filters</h5>
+                            <a href="{% url 'property_list' %}" class="small text-decoration-none text-muted fw-bold">Reset</a>
+                        </div>
+                    </div>
+                    <div class="card-body p-4">
+                        <form method="get">
+                            <input type="hidden" name="q" value="{{ request.GET.q }}">
+                            
+                            <div class="mb-4">
+                                <label class="form-label fw-bold small text-uppercase text-muted">Property Type</label>
+                                <select name="property_type" class="form-select border-light bg-light" onchange="this.form.submit()">
+                                    <option value="">All Types</option>
+                                    {% for code, name in property_types %}
+                                        <option value="{{ code }}" {% if request.GET.property_type == code %}selected{% endif %}>{{ name }}</option>
+                                    {% endfor %}
+                                </select>
+                            </div>
+
+                            <div class="mb-4">
+                                <label class="form-label fw-bold small text-uppercase text-muted">Location</label>
+                                <select name="city" class="form-select border-light bg-light" onchange="this.form.submit()">
+                                    <option value="">All Cities</option>
+                                    {% for city in cities %}
+                                        <option value="{{ city }}" {% if request.GET.city == city %}selected{% endif %}>{{ city }}</option>
+                                    {% endfor %}
+                                </select>
+                            </div>
+
+                            <div class="mb-4">
+                                <label class="form-label fw-bold small text-uppercase text-muted">Price Range ({{ properties.0.currency|default:'KES' }})</label>
+                                <div class="row g-2">
+                                    <div class="col-6">
+                                        <input type="number" name="min_price" class="form-control border-light bg-light" placeholder="Min" value="{{ request.GET.min_price }}">
+                                    </div>
+                                    <div class="col-6">
+                                        <input type="number" name="max_price" class="form-control border-light bg-light" placeholder="Max" value="{{ request.GET.max_price }}">
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div class="mb-4">
+                                <label class="form-label fw-bold small text-uppercase text-muted">Sort By</label>
+                                <select name="sort" class="form-select border-light bg-light" onchange="this.form.submit()">
+                                    <option value="-created_at" {% if request.GET.sort == '-created_at' %}selected{% endif %}>Newest First</option>
+                                    <option value="price" {% if request.GET.sort == 'price' %}selected{% endif %}>Price: Low to High</option>
+                                    <option value="-price" {% if request.GET.sort == '-price' %}selected{% endif %}>Price: High to Low</option>
+                                </select>
+                            </div>
+
+                            <div class="d-grid">
+                                <button type="submit" class="btn btn-primary rounded-pill fw-bold py-3">Apply Filters</button>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-lg-9">
+            <div class="d-flex justify-content-between align-items-center mb-4 px-2">
+                <div>
+                    <h4 class="fw-bold mb-0" style="color: var(--brand-primary);">{{ total_count }} Properties Found</h4>
+                    <span class="text-muted small d-none d-md-inline">Showing results based on your preferences</span>
+                </div>
+                
+                <div class="dropdown d-lg-none">
+                    <button class="btn btn-white border rounded-pill dropdown-toggle btn-sm" type="button" data-bs-toggle="dropdown">
+                        Sort
+                    </button>
+                    <ul class="dropdown-menu dropdown-menu-end shadow border-0">
+                        <li><a class="dropdown-item" href="?sort=-created_at">Newest First</a></li>
+                        <li><a class="dropdown-item" href="?sort=price">Price: Low to High</a></li>
+                    </ul>
+                </div>
+            </div>
+
+            <div class="row g-4">
+                {% for property in properties %}
+                <div class="col-md-6 col-xl-4">
+                    <div class="card h-100 shadow-sm property-card rounded-4 bg-white overflow-hidden">
+                        <div class="position-relative card-img-wrapper">
+                            <a href="{% url 'property_detail' property.pk %}">
+                                {% if property.images.first %}
+                                    <img src="{{ property.images.first.image.url }}" class="card-img-top object-fit-cover" height="260" alt="{{ property.title }}">
+                                {% else %}
+                                    <img src="https://images.unsplash.com/photo-1564013799919-ab600027ffc6?auto=format&fit=crop&w=800&q=80" class="card-img-top object-fit-cover" height="260" alt="Placeholder">
+                                {% endif %}
+                            </a>
+                            
+                            <div class="position-absolute top-0 start-0 m-3 d-flex gap-2">
+                                <span class="badge badge-arthi-type shadow-sm px-3 py-2 rounded-pill small text-uppercase fw-bold">{{ property.get_property_type_display }}</span>
+                                {% if property.status == 'available' %}
+                                    <span class="badge badge-arthi-available shadow-sm px-2 py-2 rounded-circle ms-1" title="Available"><i class="bi bi-check-lg"></i></span>
+                                {% else %}
+                                    <span class="badge bg-secondary shadow-sm px-3 py-2 rounded-pill">{{ property.get_status_display }}</span>
+                                {% endif %}
+                            </div>
+
+                            <button class="btn btn-light btn-sm rounded-circle position-absolute top-0 end-0 m-3 shadow-sm d-flex align-items-center justify-content-center" 
+                                    style="width: 35px; height: 35px; color: var(--brand-primary);" onclick="toggleFavorite(this)">
+                                <i class="bi bi-heart"></i>
+                            </button>
+
+                            <div class="quick-view-overlay position-absolute bottom-0 w-100 p-3" style="background: linear-gradient(to top, rgba(27, 77, 62, 0.6), transparent);">
+                                <a href="{% url 'property_detail' property.pk %}" class="btn btn-light w-100 rounded-pill fw-bold shadow-sm" style="color: var(--brand-primary);">View Details</a>
+                            </div>
+                        </div>
+
+                        <div class="card-body p-3">
+                            <div class="d-flex justify-content-between align-items-center mb-1">
+                                <h5 class="price-text fw-bold mb-0">
+                                    {{ property.currency }} {{ property.price|floatformat:0|intcomma }}
+                                </h5>
+                                <span class="badge bg-light text-dark border fw-normal" style="color: var(--brand-primary) !important;">{{ property.get_listing_type_display }}</span>
+                            </div>
+                            
+                            <h6 class="card-title fw-bold text-truncate mb-2 mt-2">
+                                <a href="{% url 'property_detail' property.pk %}" class="text-decoration-none stretched-link-z">{{ property.title }}</a>
+                            </h6>
+                            
+                            <p class="text-muted small mb-3 text-truncate">
+                                <i class="bi bi-geo-alt-fill me-1" style="color: var(--brand-secondary);"></i> {{ property.address }}, {{ property.city }}
+                            </p>
+
+                            <div class="d-flex border-top pt-3 justify-content-between text-muted small card-info-icons">
+                                <span><i class="bi bi-door-closed me-1"></i> {{ property.bedrooms|default:"-" }} Beds</span>
+                                <span><i class="bi bi-droplet me-1"></i> {{ property.bathrooms|default:"-" }} Baths</span>
+                                <span><i class="bi bi-aspect-ratio me-1"></i> {{ property.area_sqft|default:property.land_size_acres|floatformat:0|intcomma }}</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                {% empty %}
+                <div class="col-12 text-center py-5">
+                    <div class="mb-3 opacity-25" style="font-size: 4rem; color: var(--brand-primary);"><i class="bi bi-house-x"></i></div>
+                    <h4 style="color: var(--brand-primary);">No listings found</h4>
+                    <p class="text-muted">Try adjusting the filters on the left.</p>
+                    <a href="{% url 'property_list' %}" class="btn btn-outline-primary rounded-pill">Clear All Filters</a>
+                </div>
+                {% endfor %}
+            </div>
+
+            {% if properties.has_other_pages %}
+            <nav class="mt-5">
+                <ul class="pagination justify-content-center">
+                    {% if properties.has_previous %}
+                        <li class="page-item"><a class="page-link rounded-circle border-0 bg-white shadow-sm mx-1" style="color: var(--brand-primary);" href="?page={{ properties.previous_page_number }}"><i class="bi bi-chevron-left"></i></a></li>
+                    {% endif %}
+                    <li class="page-item disabled"><span class="page-link border-0 bg-transparent fw-bold" style="color: var(--brand-primary);">Page {{ properties.number }}</span></li>
+                    {% if properties.has_next %}
+                        <li class="page-item"><a class="page-link rounded-circle border-0 bg-white shadow-sm mx-1" style="color: var(--brand-primary);" href="?page={{ properties.next_page_number }}"><i class="bi bi-chevron-right"></i></a></li>
+                    {% endif %}
+                </ul>
+            </nav>
+            {% endif %}
+        </div>
+    </div>
+</div>
+
+<button class="btn btn-primary rounded-pill px-4 py-3 fw-bold mobile-filter-fab d-lg-none shadow-lg" type="button" data-bs-toggle="offcanvas" data-bs-target="#filterOffcanvas">
+    <i class="bi bi-sliders me-2"></i> Filters
+</button>
+
+<div class="offcanvas offcanvas-bottom h-75 rounded-top-4" tabindex="-1" id="filterOffcanvas">
+    <div class="offcanvas-header border-bottom px-4">
+        <h5 class="offcanvas-title fw-bold" style="color: var(--brand-primary); font-family: var(--font-heading);">Filter Listings</h5>
+        <button type="button" class="btn-close" data-bs-dismiss="offcanvas"></button>
+    </div>
+    <div class="offcanvas-body p-4">
+        <form method="get">
+            <input type="hidden" name="q" value="{{ request.GET.q }}">
+            <div class="mb-3">
+                <label class="form-label fw-bold small text-uppercase text-muted">Type</label>
+                <select name="property_type" class="form-select bg-light">
+                    <option value="">All</option>
+                    {% for code, name in property_types %}
+                        <option value="{{ code }}" {% if request.GET.property_type == code %}selected{% endif %}>{{ name }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+            <div class="mb-3">
+                <label class="form-label fw-bold small text-uppercase text-muted">City</label>
+                <select name="city" class="form-select bg-light">
+                    <option value="">All</option>
+                    {% for city in cities %}
+                        <option value="{{ city }}" {% if request.GET.city == city %}selected{% endif %}>{{ city }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+            <div class="row mb-3">
+                <div class="col-6">
+                    <label class="form-label fw-bold small text-uppercase text-muted">Min Price</label>
+                    <input type="number" name="min_price" class="form-control bg-light" value="{{ request.GET.min_price }}">
+                </div>
+                <div class="col-6">
+                    <label class="form-label fw-bold small text-uppercase text-muted">Max Price</label>
+                    <input type="number" name="max_price" class="form-control bg-light" value="{{ request.GET.max_price }}">
+                </div>
+            </div>
+            <div class="d-grid mt-4">
+                <button type="submit" class="btn btn-primary btn-lg rounded-pill py-3">Show Results</button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<script>
+    function toggleFavorite(btn) {
+        const icon = btn.querySelector('i');
+        if (icon.classList.contains('bi-heart')) {
+            icon.classList.remove('bi-heart');
+            icon.classList.add('bi-heart-fill');
+            btn.style.color = "#dc3545"; // Bootstrap danger color for filled heart
+        } else {
+            icon.classList.add('bi-heart');
+            icon.classList.remove('bi-heart-fill');
+            btn.style.color = "var(--brand-primary)"; // Back to brand color
+        }
+        event.preventDefault();
+    }
+</script>
 {% endblock %}

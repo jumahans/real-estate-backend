@@ -1,0 +1,55 @@
+/* ArthiProperties Admin Theme */
+:root {
+    --brand-primary: #1B4D3E;       /* Deep Emerald */
+    --brand-secondary: #C5A059;     /* Champagne Gold */
+    --brand-dark: #0f2b23;
+    --text-light: #f4f6f9;
+}
+
+/* Sidebar Branding */
+.main-sidebar {
+    background-color: var(--brand-primary) !important;
+}
+
+.brand-link {
+    background-color: var(--brand-dark) !important;
+    border-bottom: 1px solid var(--brand-secondary) !important;
+}
+
+/* Sidebar Active Items */
+.nav-pills .nav-link.active, .nav-pills .show > .nav-link {
+    background-color: var(--brand-secondary) !important;
+    color: #fff !important;
+    box-shadow: 0 4px 6px rgba(0,0,0,0.2);
+}
+
+/* Top Navbar */
+.main-header.navbar {
+    background-color: #fff !important;
+    border-bottom: 3px solid var(--brand-secondary) !important;
+}
+.main-header .nav-link {
+    color: var(--brand-primary) !important;
+}
+
+/* Buttons */
+.btn-primary {
+    background-color: var(--brand-primary) !important;
+    border-color: var(--brand-primary) !important;
+}
+.btn-success {
+    background-color: var(--brand-secondary) !important;
+    border-color: var(--brand-secondary) !important;
+    color: #fff;
+}
+
+/* Dashboard Cards */
+.info-box {
+    border-top: 3px solid var(--brand-primary);
+    border-radius: 8px;
+    box-shadow: 0 4px 15px rgba(0,0,0,0.05);
+}
+.info-box-icon {
+    background-color: rgba(27, 77, 62, 0.1) !important;
+    color: var(--brand-primary) !important;
+}
