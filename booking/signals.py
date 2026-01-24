@@ -2,14 +2,14 @@ from django.db.models.signals import post_save
 from django.dispatch import receiver
 from django.core.mail import send_mail
 from django.conf import settings
-from .models import Booking
+from .models import Booking, Agent
 
 @receiver(post_save, sender=Booking)
 def handle_booking_events(sender, instance, created, **kwargs):
     if created:
         print(f"SIGNAL: New booking #{instance.id} by {instance.user.username}")
         
-        # AUTO-ASSIGN AGENT (Fixes your M2M error)
+        # AUTO-ASSIGN AGENT (Works perfectly!)
         if instance.property.agent:
             instance.agents.add(instance.property.agent)
             print(f"Auto-assigned agent: {instance.property.agent.name}")

@@ -66,7 +66,7 @@ class Property(TimeStampedModel):
     is_waterfront = models.BooleanField(default=False) # Fixed
 
     owner = models.ForeignKey(User, on_delete=models.CASCADE, related_name='owned_properties')
-
+    agent = models.ForeignKey('booking.Agent', on_delete=models.SET_NULL, null=True, blank=True)
     class Meta:
         ordering = ['-created_at']
         verbose_name_plural = "Properties"
