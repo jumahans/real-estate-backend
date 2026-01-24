@@ -1,12 +1,21 @@
-.venv
-venv
+# Virtual environments
+.venv/
+venv/
+env/
 .env
-env
+
+# Django
 db.sqlite3
 
+<<<<<<< HEAD
 __pycache__/
 *.pyc
 db.sqlite3
 .env
 .vscode/
 *.sqlite3
+=======
+# Python cache
+__pycache__/
+*.pyc
+>>>>>>> 72aaa0aaa0797a432591496ef17ae2b566e11df6
