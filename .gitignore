@@ -1,21 +1,21 @@
-# Virtual environments
-.venv/
-venv/
-env/
+# Env
 .env
 
 # Django
+*.log
 db.sqlite3
+media/
 
-<<<<<<< HEAD
+# Python
 __pycache__/
 *.pyc
-db.sqlite3
-.env
+*.pyo
+*.pyd
+.Python
+env/
+venv/
+.venv/
+
+# IDE
 .vscode/
-*.sqlite3
-=======
-# Python cache
-__pycache__/
-*.pyc
->>>>>>> 72aaa0aaa0797a432591496ef17ae2b566e11df6
+.idea/
