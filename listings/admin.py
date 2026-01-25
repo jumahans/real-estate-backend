@@ -2,6 +2,12 @@ from django.contrib import admin
 from django.utils.html import format_html
 from core.admin import admin_site  # Import our custom analytical admin
 from .models import Property, PropertyImage, Inquiry, Favorite
+from django.http import JsonResponse
+from django.urls import path
+from django.db.models import Sum
+from datetime import datetime
+from dateutil.relativedelta import relativedelta
+
 
 class PropertyImageInline(admin.TabularInline):
     model = PropertyImage
@@ -15,6 +21,7 @@ class PropertyImageInline(admin.TabularInline):
 
 @admin.register(Property, site=admin_site)
 class PropertyAdmin(admin.ModelAdmin):
+    change_list_template = 'admin/listings/property_analytics.html'
     list_display = ('title_display', 'price_display', 'property_type', 'status_badge', 'city', 'created_at')
     list_filter = ('status', 'property_type', 'city', 'created_at')
     search_fields = ('title', 'address', 'city', 'description')
@@ -42,6 +49,39 @@ class PropertyAdmin(admin.ModelAdmin):
             color, obj.get_status_display().upper()
         )
     status_badge.short_description = "Status"
+
+    def get_urls(self):
+        urls = super().get_urls()
+        return [path('analytics/', self.analytics_api, name='analytics')] + urls
+    
+    def analytics_api(self, request):
+        now = datetime.now()
+        labels, data = [], []
+        
+        # Last 12 months
+        for i in range(12):
+            month = now - relativedelta(months=i)
+            sold = Property.objects.filter(
+                status='sold',
+                created_at__year=month.year,
+                created_at__month=month.month
+            ).count()
+            labels.append(month.strftime('%b'))
+            data.append(sold)
+        
+        total_sold = Property.objects.filter(status='sold').count()
+        revenue = Property.objects.filter(status='sold').aggregate(Sum('price'))['price__sum'] or 0
+        total = Property.objects.count()
+        sell_rate = round((total_sold / total * 100), 1) if total > 0 else 0
+        
+        return JsonResponse({
+            'labels': labels[::-1],  # Reverse (oldest first)
+            'data': data[::-1],
+            'total_sold': total_sold,
+            'total_revenue': float(revenue),
+            'sell_rate': sell_rate,
+            'available': Property.objects.filter(status='available').count()
+        })
 
 @admin.register(Inquiry, site=admin_site)
 class InquiryAdmin(admin.ModelAdmin):
