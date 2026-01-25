@@ -4,11 +4,18 @@ from django.core.exceptions import ValidationError
 from django.utils import timezone
 from datetime import timedelta
 from core.models import TimeStampedModel
+import datetime
 
 User = get_user_model()
 
 class BookingSettings(TimeStampedModel):
-    listing = models.OneToOneField('listings.Property', on_delete=models.CASCADE, related_name='booking_settings')
+    listing = models.OneToOneField(
+        'listings.Property', 
+        on_delete=models.CASCADE, 
+        related_name='booking_settings',
+        null=True, 
+        blank=True
+    )
     max_viewers_per_slot = models.PositiveIntegerField(default=5)
     slot_duration_minutes = models.PositiveIntegerField(default=60)
     is_active = models.BooleanField(default=True)
@@ -19,7 +26,19 @@ class BookingSettings(TimeStampedModel):
     def __str__(self):
         return f"Settings for: {self.listing.title}"
 
-    # ... get_available_slots method unchanged ...
+    def get_available_slots(self):
+        """
+        Returns a list of available datetime slots based on 
+        start_hour, end_hour, and slot_duration_minutes.
+        """
+        import datetime
+        slots = []
+        current_date = datetime.date.today()
+        # Simple logic to generate slots for today
+        for hour in range(self.start_hour, self.end_hour):
+            slot_time = datetime.datetime.combine(current_date, datetime.time(hour, 0))
+            slots.append(slot_time)
+        return slots
 
 class Booking(TimeStampedModel):
     STATUS_CHOICES = [('pending', 'Pending'), ('confirmed', 'Confirmed'), ('cancelled', 'Cancelled')]
