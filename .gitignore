@@ -1,6 +1,21 @@
-.venv
-venv
+# Env
 .env
-env
-db.sqlite3
 
+# Django
+*.log
+db.sqlite3
+media/
+
+# Python
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+.Python
+env/
+venv/
+.venv/
+
+# IDE
+.vscode/
+.idea/
