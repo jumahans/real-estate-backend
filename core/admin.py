@@ -2,12 +2,13 @@ from django.contrib import admin
 from django.contrib.auth.admin import UserAdmin
 from django.contrib.auth.models import User, Group
 from django.contrib.admin.models import LogEntry
-from django.db.models import Count, Sum, F
+from django.db.models import Count, Sum
 from django.db.models.functions import TruncMonth
 from django.utils.html import format_html
 from django.urls import reverse
 import json
 
+# Local imports
 from .models import Profile
 
 class ArthiAdminSite(admin.AdminSite):
@@ -23,7 +24,7 @@ class ArthiAdminSite(admin.AdminSite):
     def index(self, request, extra_context=None):
         # Lazy imports to prevent circular dependencies
         from listings.models import Property, Inquiry
-        from booking.models import Booking
+        # from booking.models import Booking  # Uncomment if Booking exists
 
         # =================================================
         # 1. CORE KPI CARDS
@@ -32,9 +33,8 @@ class ArthiAdminSite(admin.AdminSite):
         active_listings = Property.objects.filter(status='available').count()
         total_users = User.objects.count()
         total_inquiries = Inquiry.objects.count()
-        pending_bookings = Booking.objects.filter(status='pending').count()
         
-        # Portfolio Calculation (Handle None if DB is empty)
+        # Portfolio Calculation
         portfolio_agg = Property.objects.filter(status='available').aggregate(total=Sum('price'))
         portfolio_value = portfolio_agg['total'] or 0
 
@@ -44,6 +44,7 @@ class ArthiAdminSite(admin.AdminSite):
         
         # --- A. Inventory Breakdown (Pie Chart) ---
         prop_types = Property.objects.values('property_type').annotate(count=Count('id')).order_by('-count')
+        # Use simple list comprehension, json.dumps handles the rest
         pie_labels = [p['property_type'].replace('_', ' ').title() for p in prop_types]
         pie_data = [p['count'] for p in prop_types]
 
@@ -52,11 +53,12 @@ class ArthiAdminSite(admin.AdminSite):
         inquiries_trend = Inquiry.objects.annotate(month=TruncMonth('created_at'))\
             .values('month').annotate(count=Count('id')).order_by('month')
         
-        line_labels = [i['month'].strftime('%b %Y') for i in inquiries_trend]
-        line_data = [i['count'] for i in inquiries_trend]
+        line_labels = [i['month'].strftime('%b %Y') for i in inquiries_trend] if inquiries_trend else []
+        line_data = [i['count'] for i in inquiries_trend] if inquiries_trend else []
 
         # --- C. Geographic Hotspots (Bar Chart) ---
-        # Top 5 Cities by property count
+        # Top 5 Locations (using 'city' or 'location' field - verify your model field name!)
+        # Assuming field is 'city' based on your snippet. If it's 'location', change 'city' to 'location' below.
         city_stats = Property.objects.values('city').annotate(count=Count('id')).order_by('-count')[:5]
         bar_labels = [c['city'] for c in city_stats]
         bar_data = [c['count'] for c in city_stats]
@@ -64,7 +66,6 @@ class ArthiAdminSite(admin.AdminSite):
         # =================================================
         # 3. RECENT ACTIVITY FEED
         # =================================================
-        # Fetch the last 10 actions performed in the admin (Audit Log)
         recent_actions = LogEntry.objects.select_related('user', 'content_type').order_by('-action_time')[:6]
 
         # =================================================
@@ -74,14 +75,12 @@ class ArthiAdminSite(admin.AdminSite):
         extra_context.update({
             # KPIs
             'kpi': {
-                'properties': total_properties,
                 'active': active_listings,
-                'users': total_users,
                 'inquiries': total_inquiries,
-                'bookings': pending_bookings,
+                'users': total_users,
                 'value': portfolio_value,
             },
-            # Charts JSON
+            # Charts JSON (Dumps directly to string for JS)
             'charts': {
                 'pie_labels': json.dumps(pie_labels),
                 'pie_data': json.dumps(pie_data),
@@ -93,7 +92,8 @@ class ArthiAdminSite(admin.AdminSite):
             # Activity Log
             'recent_actions': recent_actions,
         })
-        return super().index(request, extra_context)
+        return super().index(request, extra_context=extra_context)
+
 
 # ---------------------------------------------------------
 # INSTANTIATE CUSTOM SITE
@@ -141,16 +141,14 @@ class ProfileAdmin(admin.ModelAdmin):
         queryset.update(is_agent=False)
     remove_agent.short_description = "Demote selected users to Customers"
 
+
 # ---------------------------------------------------------
 # SYSTEM MODELS REGISTRATION
 # ---------------------------------------------------------
 
-# Re-register Standard User Model with enhanced features if needed, 
-# or just standard registration to the new site.
 admin_site.register(User, UserAdmin)
 admin_site.register(Group)
 
-# Register Audit Log (Optional: View-only for security)
 @admin.register(LogEntry, site=admin_site)
 class LogEntryAdmin(admin.ModelAdmin):
     list_display = ('action_time', 'user', 'action_flag', 'change_message')
