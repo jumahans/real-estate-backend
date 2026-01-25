@@ -24,7 +24,10 @@ class BookingSettings(TimeStampedModel):
     cancellation_window_hours = models.PositiveIntegerField(default=24)
 
     def __str__(self):
-        return f"Settings for: {self.listing.title}"
+        # Check if listing exists before accessing .title
+        if self.listing:
+            return f"Settings for: {self.listing.title}"
+        return f"Unassigned Settings (ID: {self.id})"
 
     def get_available_slots(self):
         """
