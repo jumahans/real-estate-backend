@@ -1,0 +1,43 @@
+services:
+  db:
+    image: postgres:15
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    environment:
+      - POSTGRES_DB=realestate
+      - POSTGRES_USER=mkon_user
+      - POSTGRES_PASSWORD=secure_db_pass
+    networks:
+      - internal
+
+  web:
+    build: .
+    restart: always
+    environment:
+      - DATABASE_URL=postgres://mkon_user:secure_db_pass@db:5432/realestate
+      - DEBUG=False
+      - ALLOWED_HOSTS=realestate.mkon.tech
+    volumes:
+      - .:/code
+      - static_volume:/code/staticfiles
+      - media_volume:/code/media
+    networks:
+      - traefik-public
+      - internal
+    labels:
+      - "traefik.enable=true"
+      - "traefik.http.routers.realestate.rule=Host(`realestate.mkon.tech`)"
+      - "traefik.http.routers.realestate.entrypoints=websecure"
+      - "traefik.http.routers.realestate.tls.certresolver=myresolver"
+      - "traefik.http.services.realestate.loadbalancer.server.port=8000"
+
+networks:
+  traefik-public:
+    external: true
+  internal:
+    driver: bridge
+
+volumes:
+  postgres_data:
+  static_volume:
+  media_volume:

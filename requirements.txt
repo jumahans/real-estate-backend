@@ -9,3 +9,6 @@ PyJWT==2.10.1
 sqlparse==0.5.5
 tzdata==2025.3
 python-dateutil
+dj-database-url
+psycopg2-binary
+whitenoise
