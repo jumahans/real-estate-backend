@@ -35,6 +35,8 @@ services:
       - "traefik.http.routers.arthi-media.rule=Host(`arthiproperties.mkon.tech`) && PathPrefix(`/media/`)"
       - "traefik.http.routers.arthi-media.entrypoints=websecure"
       - "traefik.http.routers.arthi-media.tls.certresolver=myresolver"
+      # Link to the same service so WhiteNoise or Django can handle the internal path
+      - "traefik.http.routers.arthi-media.service=arthi-svc"
 
 networks:
   traefik-public:
