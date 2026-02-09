@@ -20,7 +20,7 @@ services:
     volumes:
       - .:/code
       - static_volume:/code/staticfiles
-      - media_volume:/code/media
+      - ./media:/code/media
     networks:
       - traefik-public
       - internal
