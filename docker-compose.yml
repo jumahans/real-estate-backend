@@ -26,10 +26,11 @@ services:
       - internal
     labels:
       - "traefik.enable=true"
-      - "traefik.http.routers.realestate.rule=Host(`realestate.mkon.tech`)"
-      - "traefik.http.routers.realestate.entrypoints=websecure"
-      - "traefik.http.routers.realestate.tls.certresolver=myresolver"
-      - "traefik.http.services.realestate.loadbalancer.server.port=8000"
+      - "traefik.docker.network=traefik-public"
+      - "traefik.http.routers.arthi-secure.rule=Host(`arthiproperties.mkon.tech`)"
+      - "traefik.http.routers.arthi-secure.entrypoints=websecure"
+      - "traefik.http.routers.arthi-secure.tls.certresolver=myresolver"
+      - "traefik.http.services.arthi-svc.loadbalancer.server.port=8000"
 
 networks:
   traefik-public:

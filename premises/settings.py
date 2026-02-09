@@ -23,8 +23,6 @@ DEBUG = os.environ.get('DEBUG', 'False') == 'True'
 # Add your VPS domains here
 ALLOWED_HOSTS = [
     'arthiproperties.mkon.tech',
-    '127.0.0.1', 
-    'localhost',
 ]
 
 # Essential for Traefik/HTTPS
@@ -137,7 +135,7 @@ SIMPLE_JWT = {
 CORS_ALLOW_ALL_ORIGINS = DEBUG # Only allow all in Dev
 if not DEBUG:
     CORS_ALLOWED_ORIGINS = [
-        "https://realestate.mkon.tech",
+        "https://arthiproperties.mkon.tech",
         # Add your frontend URL here
     ]
 CORS_ALLOW_CREDENTIALS = True
@@ -152,7 +150,7 @@ JAZZMIN_SETTINGS = {
     "search_model": ["listings.Property", "auth.User"],
     "user_avatar": None,
     "custom_css": "css/admin_theme.css",
-    "show_ui_builder": False,
+    "show_ui_builder": True,
 }
 
 # EMAIL SETTINGS
