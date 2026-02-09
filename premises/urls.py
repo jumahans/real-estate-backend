@@ -8,7 +8,4 @@ urlpatterns = [
     path('', include('listings.urls')),
     path('auth/', include('core.urls')), 
     path('booking/', include('booking.urls')),
-]
-
-if settings.DEBUG:
-    urlpatterns += static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)
+]+ static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)
